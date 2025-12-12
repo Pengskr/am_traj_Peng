@@ -338,8 +338,8 @@ void unconstrainedAM(const AmTraj &amTrajOpt, const std::vector<Eigen::Vector3d>
         //            << "Cost: " << amTrajOpt.evaluateObjective(traj) << std::endl;
         if (i == 0)
         {
-            saveCoeffMatsToCSV(coeffMats, "/home/peng/Desktop/am_traj_Peng/Inintial_abs_coeffMats_unconstrained_AM.csv");
-            saveCoeffMatsToCSV(traj.getCoeffMats(true), "/home/peng/Desktop/am_traj_Peng/Inintial_normed_coeffMats_unconstrained_AM.csv");
+            saveCoeffMatsToCSV(coeffMats, "/home/peng/Desktop/am_traj_Peng/results/Inintial_abs_coeffMats_unconstrained_AM.csv");
+            saveCoeffMatsToCSV(traj.getCoeffMats(true), "/home/peng/Desktop/am_traj_Peng/results/Inintial_normed_coeffMats_unconstrained_AM.csv");
         }
 
 
