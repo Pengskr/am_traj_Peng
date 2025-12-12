@@ -1,0 +1,2 @@
+example0:example1/env/cascade_control:example1/env/map_server/map_generator:example1/env/mission_template:example1/env/router:example1/env/so3_quadrotor_simulator:example1/env/state_machine:example1/env/utils/catkin_simple:example1/env/utils/cmake_utils:example1/env/utils/odom_visualization:example1/env/utils/pose_utils:example1/env/utils/quadrotor_msgs:example1/env/utils/traj_server:example1/env/utils/uav_utils:example1/fsto:example3
+-DCATKIN_DEVEL_PREFIX=/home/peng/Desktop/am_traj_Peng/devel -DCMAKE_INSTALL_PREFIX=/home/peng/Desktop/am_traj_Peng/install -G Unix Makefiles

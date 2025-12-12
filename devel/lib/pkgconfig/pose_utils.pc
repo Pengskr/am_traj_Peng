@@ -1,0 +1,8 @@
+prefix=/home/peng/Desktop/am_traj_Peng/devel
+
+Name: pose_utils
+Description: Description of pose_utils
+Version: 0.1.0
+Cflags: -I/home/peng/Desktop/am_traj_Peng/src/example1/env/utils/pose_utils/include
+Libs: -L${prefix}/lib -lpose_utils
+Requires: 

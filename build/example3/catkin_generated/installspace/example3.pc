@@ -1,0 +1,8 @@
+prefix=/home/peng/Desktop/am_traj_Peng/install
+
+Name: example3
+Description: Description of example3
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
