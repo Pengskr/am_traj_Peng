@@ -1,8 +1,0 @@
-prefix=/home/peng/Desktop/am_traj_Peng/devel
-
-Name: example0
-Description: Description of example0
-Version: 0.1.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 

@@ -1,8 +1,0 @@
-prefix=/home/peng/Desktop/am_traj_Peng/devel
-
-Name: uav_utils
-Description: Description of uav_utils
-Version: 0.0.0
-Cflags: -I/home/peng/Desktop/am_traj_Peng/src/example1/env/utils/uav_utils/include
-Libs: -L${prefix}/lib 
-Requires: roscpp rospy
