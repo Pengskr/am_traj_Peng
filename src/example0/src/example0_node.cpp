@@ -307,7 +307,7 @@ int main(int argc, char **argv)
             viz.visualize(traj, route, 0);
             std::cout << "---------------------------------------------------------------------------------------" << std::endl;
             std::cout << "RED:  Constrained Spatial-Temporal Optimal Trajectory" << std::endl
-                      << "      Planning tim3:" << d0*1000 << " ms" << std::endl
+                      << "      Planning time:" << d0*1000 << " ms" << std::endl
                       << "      Lap Time: " << traj.getTotalDuration() << " s" << std::endl
                       << "      Cost: " << amTrajOpt.evaluateObjective(traj) << std::endl
                       << "      Maximum Velocity Rate: " << traj.getMaxVelRate() << " m/s" << std::endl
@@ -319,7 +319,7 @@ int main(int argc, char **argv)
             d1 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count(); 
             viz.visualize(traj, route, 1);
             std::cout << "GREEN: Un-constrained Spatial Optimal Trajectory" << std::endl
-                      << "      Planning tim3:" << d1*1000 << " ms" << std::endl
+                      << "      Planning time:" << d1*1000 << " ms" << std::endl
                       << "      Lap Time: " << traj.getTotalDuration() << " s" << std::endl
                       << "      Cost: " << amTrajOpt.evaluateObjective(traj) << std::endl
                       << "      Maximum Velocity Rate: " << traj.getMaxVelRate() << " m/s" << std::endl
@@ -331,7 +331,7 @@ int main(int argc, char **argv)
             d2 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count(); 
             viz.visualize(traj, route, 2);
             std::cout << "BLUE: Constrained Spatial Optimal Trajectory with Trapezoidal Time Allocation" << std::endl
-                      << "      Planning tim3:" << d2*1000 << " ms" << std::endl
+                      << "      Planning time:" << d2*1000 << " ms" << std::endl
                       << "      Lap Time: " << traj.getTotalDuration() << " s" << std::endl
                       << "      Cost: " << amTrajOpt.evaluateObjective(traj) << std::endl
                       << "      Maximum Velocity Rate: " << traj.getMaxVelRate() << " m/s" << std::endl
