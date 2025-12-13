@@ -1543,6 +1543,71 @@ public:
         }
         return traj;
     }
+
+    // 时间分配(梯形速度分配)+线性复杂度求解=初始解，考虑动力学，有约束交替优化(整体速度缩放一次，采用optimizeDurations(traj, false)+时间缩放+不管被约束卡住的部分 )
+    Trajectory genOptimalTrajDTCWholeScales3(const std::vector<Eigen::Vector3d> &wayPs,
+                                 Eigen::Vector3d iniVel, Eigen::Vector3d iniAcc,
+                                 Eigen::Vector3d finVel, Eigen::Vector3d finAcc) const
+    {
+        enforceBoundFeasibility(iniVel, iniAcc, finVel, finAcc);
+        std::vector<double> durations = allocateTime(wayPs, 1.0);               // 初始解 T0
+        std::vector<CoefficientMat> coeffMats = optimizeCoeffs(wayPs, durations,
+                                                               iniVel, iniAcc,
+                                                               finVel, finAcc); // 初始解 D0
+        Trajectory traj(durations, coeffMats);
+
+        if (enforceIniTrajFeasibility(traj, maxIterations))
+        {
+            bool inTol;
+            std::vector<double> lastDurations = durations;
+            for (int i = 0; i < maxIterations; i++)
+            {
+                coeffMats = optimizeCoeffs(wayPs, durations,
+                                        iniVel, iniAcc,
+                                        finVel, finAcc);
+                traj = Trajectory(durations, coeffMats);
+                optimizeDurations(traj, false);
+                
+                // Find the scaling ration such that some constraints are tight
+                double ratio = std::max(traj.getMaxVelRate() / maxVelRate / (1.0 - epsilon * epsilon),
+                                        sqrt(traj.getMaxAccRate() / maxAccRate / (1.0 - epsilon * epsilon)));
+
+                // Scale the trajectory
+                traj.scaleTime(1 / ratio);
+
+                durations = traj.getDurations();
+
+                // Check if tol fulfilled
+                inTol = true;
+                double diffDuration;
+                for (int j = 0; j < traj.getPieceNum(); j++)
+                {
+                    diffDuration = fabs(durations[j] - lastDurations[j]);
+                    // Rel tol for each piece is used here
+                    if (lastDurations[j] * epsilon < diffDuration)
+                    {
+                        inTol = false;
+                        break;
+                    }
+                }
+                if (inTol)
+                {
+                    break;
+                }
+
+                lastDurations = durations;
+            }
+            // Although the unconstrained minimum can be reached in both directions,
+            // we find that the minimum in "Coeffs Direction" is smoother than the
+            // minimum in "Durations Direction" in most cases. Therefore, we choose
+            // the smoother one in the given relative tolerance.
+            // coeffMats = optimizeCoeffs(wayPs, durations,
+            //                         iniVel, iniAcc,
+            //                         finVel, finAcc);
+            // traj = Trajectory(durations, coeffMats);
+        }
+        return traj;
+    }
 };
 
 #endif
