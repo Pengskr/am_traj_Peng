@@ -85,7 +85,7 @@ public:
             handle.subscribe("odometry", 50, &TrajectoryServer::rcvOdometryCallback, this, ros::TransportHints().tcpNoDelay());
 
         _traj_sub =
-            handle.subscribe("trajectory", 2, &TrajectoryServer::rcvTrajectoryCallabck, this, ros::TransportHints().tcpNoDelay());
+            handle.subscribe("trajectory", 2, &TrajectoryServer::rcvTrajectoryCallabck, this, ros::TransportHints().tcpNoDelay());  // 接受来自example1_node规划的轨迹
 
         _joy_sub =
             handle.subscribe("joy", 1, &TrajectoryServer::rcvJoyCallback, this, ros::TransportHints().tcpNoDelay());
@@ -273,7 +273,7 @@ public:
         if (joy.buttons.at(JOY_MANUAL) && !joy.buttons.at(JOY_AUTO))
         {
             jstate = -1;
-            state = HOVER;
+            state = HOVER;  // 悬停状态
         }
 
         if (joy.buttons.at(JOY_AUTO) && !joy.buttons.at(JOY_MANUAL))

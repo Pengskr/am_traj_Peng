@@ -46,7 +46,8 @@ void RandomMapGenerate(bool ground_map_swt)
       cloudMap.clear();
 
       random_device rd;
-      default_random_engine eng(rd());
+      // default_random_engine eng(rd());
+      default_random_engine eng(42);
 
       uniform_real_distribution<double> rand_x = uniform_real_distribution<double>(_x_l, _x_h);
       uniform_real_distribution<double> rand_y = uniform_real_distribution<double>(_y_l, _y_h);
