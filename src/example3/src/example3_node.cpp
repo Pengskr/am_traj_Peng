@@ -310,12 +310,31 @@ void saveCoeffMatsToCSV(const std::vector<CoefficientMat> &coeffMats, const std:
     std::cout << "Saved coefficient matrices to " << filename << std::endl;
 }
 
+void saveLossTOCSV(const std::vector<double> &loss, const std::string &filename)
+{
+    std::ofstream file(filename);
+    if (!file.is_open())
+    {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return;
+    }
+    file << std::setprecision(10);  // 高精度输出
+
+    for (size_t i = 0; i < loss.size(); ++i)
+    {
+        file << "Iteration " << i << ": " << loss[i] << std::endl;
+    }
+
+    file.close();
+    std::cout << "Saved loss to " << filename << std::endl;
+}
+
 void unconstrainedAM(const AmTraj &amTrajOpt, const std::vector<Eigen::Vector3d> &route, Trajectory &traj,
                         Eigen::Vector3d iniVel, Eigen::Vector3d iniAcc,
                         Eigen::Vector3d finVel, Eigen::Vector3d finAcc,
                         Visualizer viz)
 {
-
+    std::vector<double> loss;
     std::vector<double> durations = amTrajOpt.allocateTime(route, 1.0);
     std::vector<CoefficientMat> coeffMats;
     bool inTol;
@@ -334,13 +353,14 @@ void unconstrainedAM(const AmTraj &amTrajOpt, const std::vector<Eigen::Vector3d>
         // }
         // viz.visualize(traj, route, 1);
         // sleep(1.0);
-        // std:: cout << "Iteration: " << i+1 << std::endl
+        // std:: cout << "Iteration: " << i << std::endl
         //            << "Cost: " << amTrajOpt.evaluateObjective(traj) << std::endl;
-        if (i == 0)
-        {
-            saveCoeffMatsToCSV(coeffMats, "/home/peng/Desktop/am_traj_Peng/results/Inintial_abs_coeffMats_unconstrained_AM.csv");
-            saveCoeffMatsToCSV(traj.getCoeffMats(true), "/home/peng/Desktop/am_traj_Peng/results/Inintial_normed_coeffMats_unconstrained_AM.csv");
-        }
+        loss.push_back(amTrajOpt.evaluateObjective(traj));
+        // if (i == 0)
+        // {
+        //     saveCoeffMatsToCSV(coeffMats, "/home/peng/Desktop/am_traj_Peng/results/Inintial_abs_coeffMats_unconstrained_AM.csv");
+        //     saveCoeffMatsToCSV(traj.getCoeffMats(true), "/home/peng/Desktop/am_traj_Peng/results/Inintial_normed_coeffMats_unconstrained_AM.csv");
+        // }
 
 
         amTrajOpt.optimizeDurations(traj, false);
@@ -386,8 +406,11 @@ void unconstrainedAM(const AmTraj &amTrajOpt, const std::vector<Eigen::Vector3d>
     //     std::cout << "coeffMats[" << i << "] =\n"
     //             << coeffMats[i] << std::endl << std::endl;
     // }
-    saveCoeffMatsToCSV(coeffMats, "/home/peng/Desktop/am_traj_Peng/Optimal_abs_coeffMats_unconstrained_AM.csv");
-    saveCoeffMatsToCSV(traj.getCoeffMats(true), "/home/peng/Desktop/am_traj_Peng/Optimal_normed_coeffMats_unconstrained_AM.csv");
+    loss.push_back(amTrajOpt.evaluateObjective(traj));
+    saveLossTOCSV(loss, "/home/peng/Desktop/am_traj_Peng/results/loss_unconstrained_AM.csv");
+    // saveCoeffMatsToCSV(coeffMats, "/home/peng/Desktop/am_traj_Peng/results/Optimal_abs_coeffMats_unconstrained_AM.csv");
+    // saveCoeffMatsToCSV(traj.getCoeffMats(true), "/home/peng/Desktop/am_traj_Peng/results/Optimal_normed_coeffMats_unconstrained_AM.csv");
+
 }
 
 
