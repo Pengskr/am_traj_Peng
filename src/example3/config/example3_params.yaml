@@ -1,8 +1,8 @@
 # Topics Advertised
-TrajectoryTopic:            '/example0/trajectory'
-WayPointsTopic:             '/example0/waypoints'
-RouteTopic:                 '/example0/route'
-AccTopic:                   '/example0/acc'
+TrajectoryTopic:            '/example3/trajectory'
+WayPointsTopic:             '/example3/waypoints'
+RouteTopic:                 '/example3/route'
+AccTopic:                   '/example3/acc'
 
 # Frame Name
 FrameName:                  'world'

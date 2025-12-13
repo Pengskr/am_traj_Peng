@@ -61,7 +61,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: false
-      Marker Topic: /example0/route
+      Marker Topic: /example3/route
       Name: Marker
       Namespaces:
         {}
@@ -69,7 +69,7 @@ Visualization Manager:
       Value: false
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /example0/trajectory
+      Marker Topic: /example3/trajectory
       Name: Marker
       Namespaces:
         trajectory: true
@@ -77,7 +77,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /example0/waypoints
+      Marker Topic: /example3/waypoints
       Name: Marker
       Namespaces:
         waypoints: true
@@ -85,7 +85,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /example0/acc
+      Marker Topic: /example3/acc
       Name: MarkerArray
       Namespaces:
         acc: true
