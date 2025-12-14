@@ -80,7 +80,30 @@ void MavGlobalPlanner::targetCallBack(const geometry_msgs::PoseStamped::ConstPtr
         Vector3d g(msg->pose.position.x, msg->pose.position.y, zGoal);
         vector<Vector3d> route;
 
-        r3planner.planOnce(s, g, route); // 使用OMPL中的InformedRRTstar，搜索时长为 config.SearchDuration，搜索结果保存在route中
+        // r3planner.planOnce(s, g, route); // 使用OMPL中的InformedRRTstar，搜索时长为 config.SearchDuration，搜索结果保存在route中
+
+        // 考虑中间点
+        vector<Vector3d> waypoints = {
+            s,
+            Vector3d(-1, -5, 1),
+            Vector3d(14, -8, 2),
+            Vector3d(6, 3, 3),
+            Vector3d(5, 12, 3),
+            Vector3d(-3, 3, 3),
+            Vector3d(-13, 7, 1),
+            Vector3d(-8, -1, 2),
+            s
+        };
+        vector<Vector3d> route_temp;
+        for (size_t i = 1; i < waypoints.size(); ++i)
+        {
+            route_temp.clear();
+            r3planner.planOnce(waypoints[i-1], waypoints[i], route_temp);   // 使用OMPL中的InformedRRTstar，搜索时长为 config.SearchDuration，搜索结果保存在route中
+            // 避免重复连接点
+            if (i > 1 && !route_temp.empty()) route_temp.erase(route_temp.begin());
+            route.insert(route.end(), route_temp.begin(), route_temp.end());
+        }
+
 
         if (route.size() > 1)
         {
