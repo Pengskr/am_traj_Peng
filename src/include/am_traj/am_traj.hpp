@@ -1445,10 +1445,26 @@ public:
           maxVelRate(mVr), maxAccRate(mAr),
           maxIterations(mIts), epsilon(eps) {}
 
+    // 无约束优化: 初始时间分配(梯形速度分配)+线性复杂度求解+时间分配闭式求解
+    Trajectory genOptimalTrajDs3(const std::vector<Eigen::Vector3d> &wayPs,
+                                Eigen::Vector3d iniVel, Eigen::Vector3d iniAcc,
+                                Eigen::Vector3d finVel, Eigen::Vector3d finAcc) const
+    {
+        std::vector<double> durations = allocateTime(wayPs, 1.0);   // 梯形速度分配
+        std::vector<CoefficientMat> coeffMats = optimizeCoeffs(wayPs, durations,
+                                                               iniVel, iniAcc,
+                                                               finVel, finAcc);
+        Trajectory traj(durations, coeffMats);  // 每段轨迹存储了归一化系数和对应时间duration
+        
+        optimizeDurations(traj, false);
+
+        return traj;
+    }
+
     // Generate trajectory with optimal coefficients
     // Durations are allocated heuristically and scaled to satisfy constraints
     // Only applies to rest-to-rest trajectories
-    // 时间分配(梯形速度分配)+线性复杂度求解+时间缩放，有约束优化，整体缩放一次
+    // 有约束优化: 时间分配(梯形速度分配)+线性复杂度求解+时间缩放，整体缩放一次
     Trajectory genOptimalTrajDCs3(const std::vector<Eigen::Vector3d> &wayPs,
                                 Eigen::Vector3d iniVel, Eigen::Vector3d iniAcc,
                                 Eigen::Vector3d finVel, Eigen::Vector3d finAcc) const
