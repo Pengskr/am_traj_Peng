@@ -418,12 +418,13 @@ void unconstrainedAM(const AmTraj &amTrajOpt, const std::vector<Eigen::Vector3d>
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "example0_node");
+    ros::init(argc, argv, "example3_node");
     ros::NodeHandle nh_, nh_priv("~");
 
     Config config(nh_priv);
     Visualizer viz(config, nh_);    // 可视化类
     RandomRouteGenerator routeGen(Array3d(-16, -16, -16), Array3d(16, 16, 16));
+
     AmTraj amTrajOpt(config.weightT, config.weightAcc, config.weightJerk,
                      config.maxVelRate, config.maxAccRate, config.iterations, config.epsilon);
 
@@ -450,7 +451,7 @@ int main(int argc, char **argv)
     tc1 = std::chrono::high_resolution_clock::now();
     d1 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count(); 
     std::cout << "GREEN: Un-constrained Spatial Optimal Trajectory" << std::endl
-                << "      Planning tim3:" << d1*1000 << " ms" << std::endl
+                << "      Planning time:" << d1*1000 << " ms" << std::endl
                 << "      Lap Time: " << traj.getTotalDuration() << " s" << std::endl
                 << "      Cost: " << amTrajOpt.evaluateObjective(traj) << std::endl
                 << "      Maximum Velocity Rate: " << traj.getMaxVelRate() << " m/s" << std::endl
