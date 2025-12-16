@@ -277,6 +277,8 @@ private:
     std::uniform_real_distribution<double> uniformReal;
 };
 
+
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "example0_node");
@@ -290,9 +292,12 @@ int main(int argc, char **argv)
 
     vector<Vector3d> route;
     Vector3d zeroVec(0.0, 0.0, 0.0);
-    Trajectory traj;
+    Trajectory traj, traj_GD;
     Rate lp(0.25);
-    int groupSize = 10;
+    int groupSize = 5;
+    std::vector<double> durs;
+    durs.clear();
+    std::vector<CoefficientMat> coeffMats;
 
     std::chrono::high_resolution_clock::time_point tc0, tc1;
     double d0, d1, d2;
@@ -306,33 +311,37 @@ int main(int argc, char **argv)
             route = routeGen.generate(i);
             
             tc0 = std::chrono::high_resolution_clock::now();
-            traj = amTrajOpt.genOptimalTrajDs3(route, zeroVec, zeroVec, zeroVec, zeroVec);   // 只实现了 s=3
+            traj = amTrajOpt.genOptimalTrajDTs3(route, zeroVec, zeroVec, zeroVec, zeroVec);   // 只实现了 s=3
             tc1 = std::chrono::high_resolution_clock::now();
             d1 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count(); 
             viz.visualize(traj, route, 1);
-            std::cout << "GREEN: Un-constrained Spatial Optimal Trajectory with time-optimal trajectory" << std::endl
+            std::cout << "GREEN: Un-constrained Spatial Optimal Trajectory" << std::endl
                       << "      Planning time:" << d1*1000 << " ms" << std::endl
                       << "      Lap Time: " << traj.getTotalDuration() << " s" << std::endl
                       << "      Cost: " << amTrajOpt.evaluateObjective(traj) << std::endl
                       << "      Maximum Velocity Rate: " << traj.getMaxVelRate() << " m/s" << std::endl
                       << "      Maximum Acceleration Rate: " << traj.getMaxAccRate() << " m/s^2" << std::endl;
-
-            // tc0 = std::chrono::high_resolution_clock::now();
-            // traj = amTrajOpt.genOptimalTrajDCs3(route, zeroVec, zeroVec, zeroVec, zeroVec);   // 只实现了 s=3
-            // tc1 = std::chrono::high_resolution_clock::now();
-            // d2 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count(); 
-            // viz.visualize(traj, route, 2);
-            // std::cout << "BLUE: Constrained Spatial Optimal Trajectory with Trapezoidal Time Allocation" << std::endl
-            //           << "      Planning time:" << d2*1000 << " ms" << std::endl
-            //           << "      Lap Time: " << traj.getTotalDuration() << " s" << std::endl
-            //           << "      Cost: " << amTrajOpt.evaluateObjective(traj) << std::endl
-            //           << "      Maximum Velocity Rate: " << traj.getMaxVelRate() << " m/s" << std::endl
-            //           << "      Maximum Acceleration Rate: " << traj.getMaxAccRate() << " m/s^2" << std::endl;
+            
+            // durs = traj.getDurations();
+            // for (int k = 0; k < i; k++)
+            // {
+            //     std::cout << "            Segment " << k << ": duration: " << durs[k] << " s" << std::endl;
+            // }
+            // durs.clear();
+            // coeffMats = traj.getCoeffMats();
+            // for (size_t i = 0; i < coeffMats.size(); ++i) {
+            //     std::cout << "coeffMats[" << i << "] =\n"
+            //             << coeffMats[i] << std::endl << std::endl;
+            // }
+            // coeffMats.clear();
 
             
+
+
             mav_trajectory_generation::Vertex::Vector vertices;
             const int dimension = 3;
-            const int derivative_to_optimize = mav_trajectory_generation::derivative_order::JERK;
+            // const int derivative_to_optimize = mav_trajectory_generation::derivative_order::JERK;
+            const int derivative_to_optimize = 2;
             mav_trajectory_generation::Vertex start(dimension), middle(dimension), end(dimension);
 
             start.makeStartOrEnd(route[0], derivative_to_optimize);
@@ -350,6 +359,9 @@ int main(int argc, char **argv)
             parameters.f_rel = 0.05;
             parameters.x_rel = 0.1;
             parameters.time_penalty = config.weightT;
+            parameters.use_soft_constraints = false;
+            parameters.print_debug_info = false;
+            parameters.print_debug_info_time_allocation = false;
             parameters.initial_stepsize_rel = 0.1;
             parameters.inequality_constraint_tolerance = 0.1;
             parameters.time_alloc_method = mav_trajectory_generation::NonlinearOptimizationParameters::kRichterTime;
@@ -360,27 +372,40 @@ int main(int argc, char **argv)
 
             tc0 = std::chrono::high_resolution_clock::now();
             segment_times = amTrajOpt.allocateTime(route, 1.0);
-            const int N = 8;
+            const int N = 6;
             mav_trajectory_generation::PolynomialOptimizationNonLinear<N> opt(dimension, parameters);
             opt.setupFromVertices(vertices, segment_times, derivative_to_optimize);
-            opt.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::VELOCITY, v_max);
-            opt.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, a_max);
+            // opt.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::VELOCITY, v_max);
+            // opt.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, a_max);
             opt.optimize();
             tc1 = std::chrono::high_resolution_clock::now();
             d2 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count(); 
 
-            // opt最优轨迹到Trajectory traj转换层
 
+            mav_traj2am_traj(opt, durs, traj_GD);
+
+            viz.visualize(traj_GD, route, 2);
             std::cout << "BLUE: Gradient descent-based Nonlinear Optimization with Trapezoidal Time Allocation" << std::endl
-                      << "      Planning time:" << d2*1000 << " ms" << std::endl;
-                    //   << "      Lap Time: " << traj.getTotalDuration() << " s" << std::endl
-                    //   << "      Cost: " << amTrajOpt.evaluateObjective(traj) << std::endl
-                    //   << "      Maximum Velocity Rate: " << traj.getMaxVelRate() << " m/s" << std::endl
-                    //   << "      Maximum Acceleration Rate: " << traj.getMaxAccRate() << " m/s^2" << std::endl;
+                      << "      Planning time:" << d2*1000 << " ms" << std::endl
+                      << "      Lap Time: " << opt.optimization_info_.lap_time << " s" << std::endl
+                      << "      Cost: " << opt.optimization_info_.cost_soft_constraints + opt.optimization_info_.cost_time + opt.optimization_info_.cost_trajectory << std::endl
+                      << "      Maximum Velocity Rate: " << traj_GD.getMaxVelRate() << " m/s" << std::endl
+                      << "      Maximum Acceleration Rate: " << traj_GD.getMaxAccRate() << " m/s^2" << std::endl;
 
+            // for (int k = 0; k < i; k++)
+            // {
+            //     std::cout << "            Segment " << k << ": duration: " << durs[k] << " s" << std::endl;
+            // }
+            // durs.clear();
+            // coeffMats = traj_GD.getCoeffMats();
+            // for (size_t i = 0; i < coeffMats.size(); ++i) {
+            //     std::cout << "coeffMats[" << i << "] =\n"
+            //             << coeffMats[i] << std::endl << std::endl;
+            // }
+            // coeffMats.clear();
 
-            // spinOnce();
-            // lp.sleep();
+            spinOnce();
+            lp.sleep();
         }
 
     }

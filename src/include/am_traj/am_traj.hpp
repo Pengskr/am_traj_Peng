@@ -2,6 +2,7 @@
 #define AM_TRAJ_HPP
 
 #include "am_traj/root_finder.hpp"
+#include <mav_trajectory_generation/polynomial_optimization_nonlinear.h>
 
 #include <vector>
 
@@ -1625,5 +1626,24 @@ public:
         return traj;
     }
 };
+
+inline void mav_traj2am_traj(mav_trajectory_generation::PolynomialOptimizationNonLinear<6>& opt, std::vector<double>& durs, Trajectory& traj)
+{
+    opt.poly_opt_.getSegmentTimes(&durs);
+    std::vector<CoefficientMat> coeffMats;
+    CoefficientMat coeff;
+    for (size_t idx__segment = 0; idx__segment < opt.poly_opt_.segments_.size(); idx__segment++)
+    {
+        Eigen::VectorXd cx = opt.poly_opt_.segments_[idx__segment][0].getCoefficients();
+        Eigen::VectorXd cy = opt.poly_opt_.segments_[idx__segment][1].getCoefficients();
+        Eigen::VectorXd cz = opt.poly_opt_.segments_[idx__segment][2].getCoefficients();
+
+        coeff.row(0) = cx.reverse().transpose();
+        coeff.row(1) = cy.reverse().transpose();
+        coeff.row(2) = cz.reverse().transpose();
+        coeffMats.push_back(coeff);  // dimention x N
+    }
+    traj = Trajectory(durs, coeffMats);
+}
 
 #endif
