@@ -6,6 +6,7 @@ find_package(Eigen3 REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   visualization_msgs
+  mav_trajectory_generation
 )
 
 

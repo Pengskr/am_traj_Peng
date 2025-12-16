@@ -8,11 +8,11 @@ AccTopic:                   '/example0/acc'
 FrameName:                  'world'
 
 # Params
-WeightT:                     1024.0
+WeightT:                     100.0
 
 WeightAcc:                   0.0
 
-WeightJerk:                  1.0
+WeightJerk:                  0.5
 
 MaxAccRate:                  4.00
 

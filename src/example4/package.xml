@@ -16,6 +16,14 @@
   <exec_depend>roscpp</exec_depend>
   <exec_depend>visualization_msgs</exec_depend>
 
+  <build_depend>mav_trajectory_generation</build_depend>
+  <exec_depend>mav_trajectory_generation</exec_depend>
+
+  <build_depend>eigen_catkin</build_depend>
+  <exec_depend>eigen_catkin</exec_depend>
+
+  <build_depend>nlopt</build_depend>
+  <exec_depend>nlopt</exec_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
