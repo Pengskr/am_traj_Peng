@@ -316,29 +316,31 @@ int main(int argc, char **argv)
             route = routeGen.generate(i);
 
             tc0 = std::chrono::high_resolution_clock::now();
-            traj = amTrajOpt.genOptimalTrajDTCs3(route, zeroVec, zeroVec, zeroVec, zeroVec);  // 只实现了 s=3
+            traj = amTrajOpt.genOptimalTrajDTs3(route, zeroVec, zeroVec, zeroVec, zeroVec);   // 只实现了 s=3
             tc1 = std::chrono::high_resolution_clock::now();
             d0 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count(); 
             viz.visualize(traj, route, 0);
             std::cout << "---------------------------------------------------------------------------------------" << std::endl;
-            std::cout << "RED:  Constrained AM Spatial-Temporal Optimal Trajectory" << std::endl
+            std::cout << "RED: Un-constrained AM Spatial-Temporal Optimal Trajectory" << std::endl
                       << "      Planning time:" << d0*1000 << " ms" << std::endl
                       << "      Lap Time: " << traj.getTotalDuration() << " s" << std::endl
                       << "      Cost: " << amTrajOpt.evaluateObjective(traj) << std::endl
                       << "      Maximum Velocity Rate: " << traj.getMaxVelRate() << " m/s" << std::endl
                       << "      Maximum Acceleration Rate: " << traj.getMaxAccRate() << " m/s^2" << std::endl;
-            
+
             tc0 = std::chrono::high_resolution_clock::now();
-            traj = amTrajOpt.genOptimalTrajDTs3(route, zeroVec, zeroVec, zeroVec, zeroVec);   // 只实现了 s=3
+            traj = amTrajOpt.genOptimalTrajDTCs3(route, zeroVec, zeroVec, zeroVec, zeroVec);  // 只实现了 s=3
             tc1 = std::chrono::high_resolution_clock::now();
             d1 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count(); 
             viz.visualize(traj, route, 1);
-            std::cout << "GREEN: Un-constrained AM Spatial-Temporal Optimal Trajectory" << std::endl
+            std::cout << "GREEN:  Constrained AM Spatial-Temporal Optimal Trajectory" << std::endl
                       << "      Planning time:" << d1*1000 << " ms" << std::endl
                       << "      Lap Time: " << traj.getTotalDuration() << " s" << std::endl
                       << "      Cost: " << amTrajOpt.evaluateObjective(traj) << std::endl
                       << "      Maximum Velocity Rate: " << traj.getMaxVelRate() << " m/s" << std::endl
                       << "      Maximum Acceleration Rate: " << traj.getMaxAccRate() << " m/s^2" << std::endl;
+            
+
             
             tc0 = std::chrono::high_resolution_clock::now();
             traj = amTrajOpt.genOptimalTrajDs3(route, zeroVec, zeroVec, zeroVec, zeroVec);   // 只实现了 s=3
