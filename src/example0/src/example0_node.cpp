@@ -306,12 +306,13 @@ int main(int argc, char **argv)
 
     std::chrono::high_resolution_clock::time_point tc0, tc1;
     double d0, d1, d2, d3;
-    for (int i = 5; i < 11 && ok(); i++)    // 段数
+    ros::Duration(1).sleep();    // 等待一会儿，rviz初始化
+    for (int i = 5; i < 21 && ok(); i++)    // 段数
     {
         for (int j = 0; j < groupSize && ok(); j++)
         {
             std::cout << "---------------------------------------------------------------------------------------" << std::endl;
-            std::cout << "Number of Segments: " << i << ", Group: " << j << std::endl;
+            std::cout << "Number of Segments: " << i << ", Group: " << j+1 << std::endl;
 
             route = routeGen.generate(i);
 
@@ -339,8 +340,6 @@ int main(int argc, char **argv)
                       << "      Cost: " << amTrajOpt.evaluateObjective(traj) << std::endl
                       << "      Maximum Velocity Rate: " << traj.getMaxVelRate() << " m/s" << std::endl
                       << "      Maximum Acceleration Rate: " << traj.getMaxAccRate() << " m/s^2" << std::endl;
-            
-
             
             tc0 = std::chrono::high_resolution_clock::now();
             traj = amTrajOpt.genOptimalTrajDs3(route, zeroVec, zeroVec, zeroVec, zeroVec);   // 只实现了 s=3
