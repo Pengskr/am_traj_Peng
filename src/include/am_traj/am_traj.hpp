@@ -1446,7 +1446,7 @@ public:
           maxVelRate(mVr), maxAccRate(mAr),
           maxIterations(mIts), epsilon(eps) {}
 
-    // 无约束优化: 初始时间分配(梯形速度分配)+线性复杂度求解+时间分配闭式求解
+    // 无约束非交替优化: 初始时间分配(梯形速度分配)+线性复杂度求解+时间分配闭式求解
     Trajectory genOptimalTrajDs3(const std::vector<Eigen::Vector3d> &wayPs,
                                 Eigen::Vector3d iniVel, Eigen::Vector3d iniAcc,
                                 Eigen::Vector3d finVel, Eigen::Vector3d finAcc) const
@@ -1465,16 +1465,12 @@ public:
     // Generate trajectory with optimal coefficients
     // Durations are allocated heuristically and scaled to satisfy constraints
     // Only applies to rest-to-rest trajectories
-    // 有约束优化: 时间分配(梯形速度分配)+线性复杂度求解+时间缩放，整体缩放一次
+    // 有约束非交替优化: 时间分配(梯形速度分配)+线性复杂度求解+时间分配闭式求解+时间整体缩放一次
     Trajectory genOptimalTrajDCs3(const std::vector<Eigen::Vector3d> &wayPs,
                                 Eigen::Vector3d iniVel, Eigen::Vector3d iniAcc,
                                 Eigen::Vector3d finVel, Eigen::Vector3d finAcc) const
     {
-        std::vector<double> durations = allocateTime(wayPs, 1.0);   // 梯形速度分配
-        std::vector<CoefficientMat> coeffMats = optimizeCoeffs(wayPs, durations,
-                                                               iniVel, iniAcc,
-                                                               finVel, finAcc);
-        Trajectory traj(durations, coeffMats);  // 每段轨迹存储了归一化系数和对应时间duration
+        Trajectory traj = genOptimalTrajDs3(wayPs, iniVel, iniAcc, finVel, finAcc);
 
         // Find the scaling ration such that some constraints are tight
         double ratio = std::max(traj.getMaxVelRate() / maxVelRate / (1.0 - epsilon * epsilon),
@@ -1488,7 +1484,7 @@ public:
 
     // Generate trajectory with optimal coefficients and optimal durations
     // Constraints are not considered
-    // 时间分配(梯形速度分配)+线性复杂度求解=初始解，不考虑动力学，无约束交替优化
+    // 无约束交替优化：时间分配(梯形速度分配)+线性复杂度求解=初始解，不考虑动力学
     Trajectory genOptimalTrajDTs3(const std::vector<Eigen::Vector3d> &wayPs,
                                 Eigen::Vector3d iniVel, Eigen::Vector3d iniAcc,
                                 Eigen::Vector3d finVel, Eigen::Vector3d finAcc) const
@@ -1542,7 +1538,7 @@ public:
 
     // Generate trajectory with optimal coefficients and best durations
     // Constraints are satisfied all the time
-    // 时间分配(梯形速度分配)+线性复杂度求解=初始解，考虑动力学，有约束交替优化
+    // 有约束交替优化：时间分配(梯形速度分配)+线性复杂度求解=初始解，考虑动力学，有约束交替优化
     Trajectory genOptimalTrajDTCs3(const std::vector<Eigen::Vector3d> &wayPs,
                                  Eigen::Vector3d iniVel, Eigen::Vector3d iniAcc,
                                  Eigen::Vector3d finVel, Eigen::Vector3d finAcc) const
@@ -1561,7 +1557,7 @@ public:
         return traj;
     }
 
-    // 时间分配(梯形速度分配)+线性复杂度求解=初始解，考虑动力学，有约束交替优化(整体速度缩放一次，采用optimizeDurations(traj, false)+时间缩放+不管被约束卡住的部分 )
+    // 有约束交替优化时间分配(梯形速度分配)+线性复杂度求解=初始解，考虑动力学，有约束交替优化(整体速度缩放一次，采用optimizeDurations(traj, false)+时间缩放+不管被约束卡住的部分 )
     Trajectory genOptimalTrajDTCWholeScales3(const std::vector<Eigen::Vector3d> &wayPs,
                                  Eigen::Vector3d iniVel, Eigen::Vector3d iniAcc,
                                  Eigen::Vector3d finVel, Eigen::Vector3d finAcc) const
@@ -1627,6 +1623,7 @@ public:
     }
 };
 
+// mav_trajectory_generation 转换到 am_traj
 inline void mav_traj2am_traj(mav_trajectory_generation::PolynomialOptimizationNonLinear<6>& opt, std::vector<double>& durs, Trajectory& traj)
 {
     opt.poly_opt_.getSegmentTimes(&durs);
