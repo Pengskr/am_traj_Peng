@@ -116,11 +116,17 @@ public:
             trajMarker.color.g = 1.00;
             trajMarker.color.b = 0.00;
         }
-        else
+        else if (id == 2)
         {
             trajMarker.color.r = 0.00;
             trajMarker.color.g = 0.00;
             trajMarker.color.b = 1.00;
+        }
+        else
+        {
+            trajMarker.color.r = 1.00;
+            trajMarker.color.g = 0.00;
+            trajMarker.color.b = 1.00;            
         }
 
         accMarker = routeMarker;
@@ -139,11 +145,17 @@ public:
             accMarker.color.g = 179.0 / 255.0;
             accMarker.color.b = 113.0 / 255.0;
         }
-        else
+        else if (id == 2)
         {
             accMarker.color.r = 30.0 / 255.0;
             accMarker.color.g = 144.0 / 255.0;
             accMarker.color.b = 255.0 / 255.0;
+        }
+        else
+        {
+            accMarker.color.r = 100.0 / 255.0;
+            accMarker.color.g = 144.0 / 255.0;
+            accMarker.color.b = 255.0 / 255.0;            
         }
         accMarker.scale.x = 0.05;
         accMarker.scale.y = 0.15;
@@ -293,11 +305,14 @@ int main(int argc, char **argv)
     int groupSize = 10;
 
     std::chrono::high_resolution_clock::time_point tc0, tc1;
-    double d0, d1, d2;
+    double d0, d1, d2, d3;
     for (int i = 5; i < 11 && ok(); i++)    // 段数
     {
         for (int j = 0; j < groupSize && ok(); j++)
         {
+            std::cout << "---------------------------------------------------------------------------------------" << std::endl;
+            std::cout << "Number of Segments: " << i << ", Group: " << j << std::endl;
+
             route = routeGen.generate(i);
 
             tc0 = std::chrono::high_resolution_clock::now();
@@ -306,7 +321,7 @@ int main(int argc, char **argv)
             d0 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count(); 
             viz.visualize(traj, route, 0);
             std::cout << "---------------------------------------------------------------------------------------" << std::endl;
-            std::cout << "RED:  Constrained Spatial-Temporal Optimal Trajectory" << std::endl
+            std::cout << "RED:  Constrained AM Spatial-Temporal Optimal Trajectory" << std::endl
                       << "      Planning time:" << d0*1000 << " ms" << std::endl
                       << "      Lap Time: " << traj.getTotalDuration() << " s" << std::endl
                       << "      Cost: " << amTrajOpt.evaluateObjective(traj) << std::endl
@@ -318,7 +333,7 @@ int main(int argc, char **argv)
             tc1 = std::chrono::high_resolution_clock::now();
             d1 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count(); 
             viz.visualize(traj, route, 1);
-            std::cout << "GREEN: Un-constrained Spatial Optimal Trajectory" << std::endl
+            std::cout << "GREEN: Un-constrained AM Spatial-Temporal Optimal Trajectory" << std::endl
                       << "      Planning time:" << d1*1000 << " ms" << std::endl
                       << "      Lap Time: " << traj.getTotalDuration() << " s" << std::endl
                       << "      Cost: " << amTrajOpt.evaluateObjective(traj) << std::endl
@@ -326,12 +341,24 @@ int main(int argc, char **argv)
                       << "      Maximum Acceleration Rate: " << traj.getMaxAccRate() << " m/s^2" << std::endl;
             
             tc0 = std::chrono::high_resolution_clock::now();
-            traj = amTrajOpt.genOptimalTrajDCs3(route, zeroVec, zeroVec, zeroVec, zeroVec);   // 只实现了 s=3
+            traj = amTrajOpt.genOptimalTrajDs3(route, zeroVec, zeroVec, zeroVec, zeroVec);   // 只实现了 s=3
             tc1 = std::chrono::high_resolution_clock::now();
             d2 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count(); 
             viz.visualize(traj, route, 2);
-            std::cout << "BLUE: Constrained Spatial Optimal Trajectory with Trapezoidal Time Allocation" << std::endl
+            std::cout << "BLUE: Un-Constrained Spatial Optimal Trajectory with Trapezoidal Time Allocation" << std::endl
                       << "      Planning time:" << d2*1000 << " ms" << std::endl
+                      << "      Lap Time: " << traj.getTotalDuration() << " s" << std::endl
+                      << "      Cost: " << amTrajOpt.evaluateObjective(traj) << std::endl
+                      << "      Maximum Velocity Rate: " << traj.getMaxVelRate() << " m/s" << std::endl
+                      << "      Maximum Acceleration Rate: " << traj.getMaxAccRate() << " m/s^2" << std::endl;
+
+            tc0 = std::chrono::high_resolution_clock::now();
+            traj = amTrajOpt.genOptimalTrajDCs3(route, zeroVec, zeroVec, zeroVec, zeroVec);   // 只实现了 s=3
+            tc1 = std::chrono::high_resolution_clock::now();
+            d3 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count(); 
+            viz.visualize(traj, route, 3);
+            std::cout << "PURPLE: Constrained Spatial Optimal Trajectory with Trapezoidal Time Allocation" << std::endl
+                      << "      Planning time:" << d3*1000 << " ms" << std::endl
                       << "      Lap Time: " << traj.getTotalDuration() << " s" << std::endl
                       << "      Cost: " << amTrajOpt.evaluateObjective(traj) << std::endl
                       << "      Maximum Velocity Rate: " << traj.getMaxVelRate() << " m/s" << std::endl
