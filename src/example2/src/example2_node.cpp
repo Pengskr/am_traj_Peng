@@ -306,7 +306,7 @@ int main(int argc, char **argv)
         for (int j = 0; j < groupSize && ok(); j++)
         {
             std::cout << "---------------------------------------------------------------------------------------" << std::endl;
-            std::cout << "Number of Segments: " << i << " Group: " << j << std::endl;
+            std::cout << "Number of Segments: " << i << ", Group: " << j << std::endl;
 
             route = routeGen.generate(i);
             
