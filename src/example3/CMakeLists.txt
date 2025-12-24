@@ -5,6 +5,7 @@ find_package(Eigen3 REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  roslib
   visualization_msgs
   mav_trajectory_generation
 )
@@ -20,7 +21,7 @@ include_directories(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES image_receiver
-#  CATKIN_DEPENDS roscpp rospy std_msgs
+#  CATKIN_DEPENDS roscpp rospy std_msgs roslib
 #  DEPENDS system_lib
 )
 
