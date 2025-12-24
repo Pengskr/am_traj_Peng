@@ -348,7 +348,6 @@ int main(int argc, char **argv)
         v_max_sum_0 = 0.0, v_max_sum_1 = 0.0, v_max_sum_2 = 0.0, v_max_sum_3 = 0.0, v_max_sum_4 = 0.0;
         a_max_sum_0 = 0.0, a_max_sum_1 = 0.0, a_max_sum_2 = 0.0, a_max_sum_3 = 0.0, a_max_sum_4 = 0.0;
 
-
         for (int j = 0; j < groupSize && ok(); j++)
         {
             std::ofstream csv_red_vel(result_dir + "RED_Un-constrained-AM_vel.csv");
