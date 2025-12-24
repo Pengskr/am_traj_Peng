@@ -322,7 +322,6 @@ int main(int argc, char **argv)
     int M_max = 7;
     int groupSize = 1;
 
-
     std::chrono::high_resolution_clock::time_point tc0, tc1;
     double d0, d1, d2, d3, d4, d0_sum, d1_sum, d2_sum, d3_sum, d4_sum, d0_mean = 0.0, d1_mean = 0.0, d2_mean = 0.0, d3_mean = 0.0, d4_mean = 0.0;
     double t_lap_0, t_lap_1, t_lap_2, t_lap_3, t_lap_4, t_lap_sum_0, t_lap_sum_1, t_lap_sum_2, t_lap_sum_3, t_lap_sum_4, t_lap_mean_0, t_lap_mean_1, t_lap_mean_2, t_lap_mean_3, t_lap_mean_4;
