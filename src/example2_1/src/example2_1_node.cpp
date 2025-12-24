@@ -97,39 +97,45 @@ public:
         wayPointsMarker = routeMarker;
         wayPointsMarker.type = visualization_msgs::Marker::SPHERE_LIST;
         wayPointsMarker.ns = "waypoints";
-        wayPointsMarker.color.r = 1.00;
-        wayPointsMarker.color.g = 1.00;
-        wayPointsMarker.color.b = 1.00;
-        wayPointsMarker.scale.x = 0.30;
-        wayPointsMarker.scale.y = 0.30;
-        wayPointsMarker.scale.z = 0.30;
+        wayPointsMarker.color.r = 0.20;
+        wayPointsMarker.color.g = 0.20;
+        wayPointsMarker.color.b = 0.80;
+        wayPointsMarker.scale.x = 0.50;
+        wayPointsMarker.scale.y = 0.50;
+        wayPointsMarker.scale.z = 0.50;
 
         trajMarker = routeMarker;
         trajMarker.ns = "trajectory";
         trajMarker.scale.x = 0.15;
         if (id == 0)
         {
-            trajMarker.color.r = 1.00;
-            trajMarker.color.g = 0.00;
-            trajMarker.color.b = 0.00;
+            trajMarker.color.r = 0.85;
+            trajMarker.color.g = 0.10;
+            trajMarker.color.b = 0.10;
         }
         else if (id == 1)
         {
-            trajMarker.color.r = 0.00;
+            trajMarker.color.r = 1.00;
             trajMarker.color.g = 1.00;
             trajMarker.color.b = 0.00;
-        }
+        }        
         else if (id == 2)
         {
             trajMarker.color.r = 0.00;
-            trajMarker.color.g = 0.00;
-            trajMarker.color.b = 1.00;
+            trajMarker.color.g = 0.45;
+            trajMarker.color.b = 0.74;
         }
-        else
+        else if (id == 3)
         {
             trajMarker.color.r = 1.00;
             trajMarker.color.g = 0.00;
             trajMarker.color.b = 1.00;            
+        }
+        else
+        {
+            trajMarker.color.r = 0.10;
+            trajMarker.color.g = 0.65;
+            trajMarker.color.b = 0.10;
         }
 
         accMarker = routeMarker;
@@ -153,12 +159,18 @@ public:
             accMarker.color.r = 30.0 / 255.0;
             accMarker.color.g = 144.0 / 255.0;
             accMarker.color.b = 255.0 / 255.0;
-        }
-        else
+        } 
+        else if (id == 3)
         {
             accMarker.color.r = 100.0 / 255.0;
             accMarker.color.g = 144.0 / 255.0;
             accMarker.color.b = 255.0 / 255.0;            
+        }
+        else
+        {
+            accMarker.color.r = 179.0 / 255.0;
+            accMarker.color.g = 179.0 / 255.0;
+            accMarker.color.b = 113.0 / 255.0;
         }
         accMarker.scale.x = 0.05;
         accMarker.scale.y = 0.15;
@@ -307,37 +319,46 @@ int main(int argc, char **argv)
     Vector3d zeroVec(0.0, 0.0, 0.0);
     Trajectory traj;
     Rate lp(0.25);
-    int M_max = 16;
-    int groupSize = 100;
+    int M_max = 7;
+    int groupSize = 1;
 
 
     std::chrono::high_resolution_clock::time_point tc0, tc1;
-    double d0, d1, d2, d3, d0_sum, d1_sum, d2_sum, d3_sum, d0_mean = 0.0, d1_mean = 0.0, d2_mean = 0.0, d3_mean = 0.0;
-    double t_lap_0, t_lap_1, t_lap_2, t_lap_3, t_lap_sum_0, t_lap_sum_1, t_lap_sum_2, t_lap_sum_3, t_lap_mean_0, t_lap_mean_1, t_lap_mean_2, t_lap_mean_3;
-    double cost_0, cost_1, cost_2, cost_3, cost_sum_0, cost_sum_1, cost_sum_2, cost_sum_3, cost_mean_0, cost_mean_1, cost_mean_2, cost_mean_3;
-    double v_max_0, v_max_1, v_max_2, v_max_3, v_max_sum_0, v_max_sum_1, v_max_sum_2, v_max_sum_3, v_max_mean_0, v_max_mean_1, v_max_mean_2, v_max_mean_3;
-    double a_max_0, a_max_1, a_max_2, a_max_3, a_max_sum_0, a_max_sum_1, a_max_sum_2, a_max_sum_3, a_max_mean_0, a_max_mean_1, a_max_mean_2, a_max_mean_3;
-    
+    double d0, d1, d2, d3, d4, d0_sum, d1_sum, d2_sum, d3_sum, d4_sum, d0_mean = 0.0, d1_mean = 0.0, d2_mean = 0.0, d3_mean = 0.0, d4_mean = 0.0;
+    double t_lap_0, t_lap_1, t_lap_2, t_lap_3, t_lap_4, t_lap_sum_0, t_lap_sum_1, t_lap_sum_2, t_lap_sum_3, t_lap_sum_4, t_lap_mean_0, t_lap_mean_1, t_lap_mean_2, t_lap_mean_3, t_lap_mean_4;
+    double cost_0, cost_1, cost_2, cost_3, cost_4, cost_sum_0, cost_sum_1, cost_sum_2, cost_sum_3, cost_sum_4, cost_mean_0, cost_mean_1, cost_mean_2, cost_mean_3, cost_mean_4;
+    double v_max_0, v_max_1, v_max_2, v_max_3, v_max_4, v_max_sum_0, v_max_sum_1, v_max_sum_2, v_max_sum_3, v_max_sum_4, v_max_mean_0, v_max_mean_1, v_max_mean_2, v_max_mean_3, v_max_mean_4;
+    double a_max_0, a_max_1, a_max_2, a_max_3, a_max_4, a_max_sum_0, a_max_sum_1, a_max_sum_2, a_max_sum_3, a_max_sum_4, a_max_mean_0, a_max_mean_1, a_max_mean_2, a_max_mean_3, a_max_mean_4;
+
     // 保存csv文件：每个方法的结果保存为1个csv
     // 打开四个输出文件（每种方法一个文件）
     std::string pkg_path = ros::package::getPath("example2_1");
     std::string result_dir = pkg_path + "/results/";
 
     std::ofstream csv_red(result_dir + "RED_Un-constrained-AM.csv");
-    std::ofstream csv_green(result_dir + "GREEN_constrained-AM.csv");
+    std::ofstream csv_yellow(result_dir + "YELLOW_constrained-AM.csv");
     std::ofstream csv_blue(result_dir + "BLUE_Un-constrained_spatial_with_trapezoidal.csv");
     std::ofstream csv_purple(result_dir + "PURPLE_constrained_spatial_constrained_trapezoidal.csv");
+    std::ofstream csv_green(result_dir + "GREEN_constrained-AM_with_whole_scale.csv");
 
-    for (int M = 4; M < M_max && ok(); M++)    // 段数
+    for (int M = 5; M < M_max && ok(); M++)    // 段数
     {
-        d0_sum = 0.0; d1_sum = 0.0; d2_sum = 0.0; d3_sum = 0.0;
-        t_lap_sum_0 = 0.0; t_lap_sum_1 = 0.0; t_lap_sum_2 = 0.0; t_lap_sum_3 = 0.0;
-        cost_sum_0 = 0.0, cost_sum_1 = 0.0, cost_sum_2 = 0.0, cost_sum_3 = 0.0; 
-        v_max_sum_0 = 0.0, v_max_sum_1 = 0.0, v_max_sum_2 = 0.0, v_max_sum_3 = 0.0;
-        a_max_sum_0 = 0.0, a_max_sum_1 = 0.0, a_max_sum_2 = 0.0, a_max_sum_3 = 0.0;
+        d0_sum = 0.0; d1_sum = 0.0; d2_sum = 0.0; d3_sum = 0.0; d4_sum = 0.0;
+        t_lap_sum_0 = 0.0; t_lap_sum_1 = 0.0; t_lap_sum_2 = 0.0; t_lap_sum_3 = 0.0; t_lap_sum_4 = 0.0;
+        cost_sum_0 = 0.0, cost_sum_1 = 0.0, cost_sum_2 = 0.0, cost_sum_3 = 0.0, cost_sum_4 = 0.0; 
+        v_max_sum_0 = 0.0, v_max_sum_1 = 0.0, v_max_sum_2 = 0.0, v_max_sum_3 = 0.0, v_max_sum_4 = 0.0;
+        a_max_sum_0 = 0.0, a_max_sum_1 = 0.0, a_max_sum_2 = 0.0, a_max_sum_3 = 0.0, a_max_sum_4 = 0.0;
+
 
         for (int j = 0; j < groupSize && ok(); j++)
         {
+            std::ofstream csv_red_vel(result_dir + "RED_Un-constrained-AM_vel.csv");
+            std::ofstream csv_red_acc(result_dir + "RED_Un-constrained-AM_acc.csv");
+            std::ofstream csv_yellow_vel(result_dir + "YELLOW_constrained-AM-vel.csv");
+            std::ofstream csv_yellow_acc(result_dir + "YELLOW_constrained-AM-acc.csv");
+            std::ofstream csv_green_vel(result_dir + "GREEN_constrained-AM_with_whole_scale-vel.csv");
+            std::ofstream csv_green_acc(result_dir + "GREEN_constrained-AM_with_whole_scale-acc.csv");
+
             std::cout << "---------------------------------------------------------------------------------------" << std::endl;
             std::cout << "Number of Segments: " << M << ", Group: " << j+1 << std::endl;
 
@@ -356,7 +377,7 @@ int main(int argc, char **argv)
             v_max_sum_0 += v_max_0;
             a_max_0 = traj.getMaxAccRate();
             a_max_sum_0 += a_max_0;
-            // viz.visualize(traj, route, 0);
+            viz.visualize(traj, route, 0);
             // std::cout << "---------------------------------------------------------------------------------------" << std::endl;
             // std::cout << "RED: Un-constrained AM Spatial-Temporal Optimal Trajectory" << std::endl
             //           << "      Planning time:" << d0*1000 << " ms" << std::endl
@@ -364,6 +385,16 @@ int main(int argc, char **argv)
             //           << "      Cost: " << cost_0 << std::endl
             //           << "      Maximum Velocity Rate: " << v_max_0 << " m/s" << std::endl
             //           << "      Maximum Acceleration Rate: " << a_max_0 << " m/s^2" << std::endl;
+            // 保存 速度，加速度曲线，用于MATLAB绘制
+            for(double t_cur = 0.0; t_cur <= t_lap_0; t_cur += 0.01)
+            {
+                
+                csv_red_vel << t_cur << "," << traj.getVel(t_cur).norm() << "\n";
+                csv_red_acc << t_cur << "," << traj.getAcc(t_cur).norm() << "\n";
+            }
+            csv_red_vel.close();
+            csv_red_acc.close();
+
 
             tc0 = std::chrono::high_resolution_clock::now();
             traj = amTrajOpt.genOptimalTrajDTCs3(route, zeroVec, zeroVec, zeroVec, zeroVec);  // 只实现了 s=3
@@ -378,13 +409,22 @@ int main(int argc, char **argv)
             v_max_sum_1 += v_max_1;
             a_max_1 = traj.getMaxAccRate();
             a_max_sum_1 += a_max_1;
-            // viz.visualize(traj, route, 1);
-            // std::cout << "GREEN: Constrained AM Spatial-Temporal Optimal Trajectory" << std::endl
+            viz.visualize(traj, route, 2);
+            // std::cout << "YELLOW: Constrained AM Spatial-Temporal Optimal Trajectory" << std::endl
             //           << "      Planning time:" << d1*1000 << " ms" << std::endl
             //           << "      Lap Time: " << t_lap_1 << " s" << std::endl
             //           << "      Cost: " << cost_1 << std::endl
             //           << "      Maximum Velocity Rate: " << v_max_1 << " m/s" << std::endl
             //           << "      Maximum Acceleration Rate: " << a_max_1 << " m/s^2" << std::endl;
+            // 保存 速度，加速度曲线，用于MATLAB绘制
+            for(double t_cur = 0.0; t_cur <= t_lap_1; t_cur += 0.01)
+            {
+                
+                csv_yellow_vel << t_cur << "," << traj.getVel(t_cur).norm() << "\n";
+                csv_yellow_acc << t_cur << "," << traj.getAcc(t_cur).norm() << "\n";
+            }
+            csv_yellow_vel.close();
+            csv_yellow_acc.close();
             
             tc0 = std::chrono::high_resolution_clock::now();
             traj = amTrajOpt.genOptimalTrajDs3(route, zeroVec, zeroVec, zeroVec, zeroVec);   // 只实现了 s=3
@@ -427,7 +467,37 @@ int main(int argc, char **argv)
             //           << "      Cost: " << cost_3 << std::endl
             //           << "      Maximum Velocity Rate: " << v_max_3 << " m/s" << std::endl
             //           << "      Maximum Acceleration Rate: " << a_max_3 << " m/s^2" << std::endl;
-                      
+
+            tc0 = std::chrono::high_resolution_clock::now();
+            traj = amTrajOpt.genOptimalTrajDTCWholeScales3(route, zeroVec, zeroVec, zeroVec, zeroVec);   // 只实现了 s=3
+            tc1 = std::chrono::high_resolution_clock::now();
+            d4 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count();
+            d4_sum += d4;
+            t_lap_4 = traj.getTotalDuration();
+            t_lap_sum_4 += t_lap_4;
+            cost_4 = amTrajOpt.evaluateObjective(traj);
+            cost_sum_4 += cost_4;
+            v_max_4 = traj.getMaxVelRate();
+            v_max_sum_4 += v_max_4;
+            a_max_4 = traj.getMaxAccRate();
+            a_max_sum_4 += a_max_4;
+            viz.visualize(traj, route, 4);
+            // std::cout << "GREEN: Constrained AM Spatial-Temporal Optimal Trajectory with whole scale" << std::endl
+            //           << "      Planning time:" << d4*1000 << " ms" << std::endl
+            //           << "      Lap Time: " << t_lap_4 << " s" << std::endl
+            //           << "      Cost: " << cost_4 << std::endl
+            //           << "      Maximum Velocity Rate: " << v_max_4 << " m/s" << std::endl
+            //           << "      Maximum Acceleration Rate: " << a_max_4 << " m/s^2" << std::endl;
+            // 保存 速度，加速度曲线，用于MATLAB绘制
+            for(double t_cur = 0.0; t_cur <= t_lap_4; t_cur += 0.01)
+            {
+                
+                csv_green_vel << t_cur << "," << traj.getVel(t_cur).norm() << "\n";
+                csv_green_acc << t_cur << "," << traj.getAcc(t_cur).norm() << "\n";
+            }
+            csv_green_vel.close();
+            csv_green_acc.close();
+
             // spinOnce();
             // lp.sleep();
         }
@@ -437,26 +507,31 @@ int main(int argc, char **argv)
         d1_mean = d1_sum / groupSize;
         d2_mean = d2_sum / groupSize;
         d3_mean = d3_sum / groupSize;
+        d4_mean = d4_sum / groupSize;
 
         t_lap_mean_0 = t_lap_sum_0 / groupSize;
         t_lap_mean_1 = t_lap_sum_1 / groupSize;
         t_lap_mean_2 = t_lap_sum_2 / groupSize;
         t_lap_mean_3 = t_lap_sum_3 / groupSize;
+        t_lap_mean_4 = t_lap_sum_4 / groupSize;
 
         cost_mean_0 = cost_sum_0 / groupSize;
         cost_mean_1 = cost_sum_1 / groupSize;
         cost_mean_2 = cost_sum_2 / groupSize;
         cost_mean_3 = cost_sum_3 / groupSize;
+        cost_mean_4 = cost_sum_4 / groupSize;
 
         v_max_mean_0 = v_max_sum_0 / groupSize;
         v_max_mean_1 = v_max_sum_1 / groupSize;
         v_max_mean_2 = v_max_sum_2 / groupSize;
         v_max_mean_3 = v_max_sum_3 / groupSize;
+        v_max_mean_4 = v_max_sum_4 / groupSize;
 
         a_max_mean_0 = a_max_sum_0 / groupSize;
         a_max_mean_1 = a_max_sum_1 / groupSize;
         a_max_mean_2 = a_max_sum_2 / groupSize;
         a_max_mean_3 = a_max_sum_3 / groupSize;
+        a_max_mean_4 = a_max_sum_4 / groupSize;
 
         std::cout << "-------------------------------------Statistical---------------------------------------" << std::endl;
         std::cout << "RED:" << std::endl
@@ -466,7 +541,7 @@ int main(int argc, char **argv)
         << "      Maximum Velocity Rate mean: " << v_max_mean_0 << " m/s" << std::endl
         << "      Maximum Acceleration Rate mean: " << a_max_mean_0 << " m/s^2" << std::endl;
 
-        std::cout << "GREEN:" << std::endl
+        std::cout << "YELLOW:" << std::endl
         << "      Planning time mean: " << d1_mean*1000 << " ms" << std::endl
         << "      Lap Time mean: " << t_lap_mean_1 << " s" << std::endl
         << "      Cost mean: " << cost_mean_1 << std::endl
@@ -487,18 +562,27 @@ int main(int argc, char **argv)
         << "      Maximum Velocity Rate mean: " << v_max_mean_3 << " m/s" << std::endl
         << "      Maximum Acceleration Rate mean: " << a_max_mean_3 << " m/s^2" << std::endl;
 
+        std::cout << "GREEN:" << std::endl
+        << "      Planning time mean: " << d4_mean*1000 << " ms" << std::endl
+        << "      Lap Time mean: " << t_lap_mean_4 << " s" << std::endl
+        << "      Cost mean: " << cost_mean_4 << std::endl
+        << "      Maximum Velocity Rate mean: " << v_max_mean_4 << " m/s" << std::endl
+        << "      Maximum Acceleration Rate mean: " << a_max_mean_4 << " m/s^2" << std::endl;
+
 
         // 将平均值写入 CSV
         csv_red   << M << "," << d0_mean*1000 << "," << t_lap_mean_0 << "," << cost_mean_0 << "," << v_max_mean_0 << "," << a_max_mean_0 << "\n";
-        csv_green << M << "," << d1_mean*1000 << "," << t_lap_mean_1 << "," << cost_mean_1 << "," << v_max_mean_1 << "," << a_max_mean_1 << "\n";
+        csv_yellow<< M << "," << d1_mean*1000 << "," << t_lap_mean_1 << "," << cost_mean_1 << "," << v_max_mean_1 << "," << a_max_mean_1 << "\n";
         csv_blue  << M << "," << d2_mean*1000 << "," << t_lap_mean_2 << "," << cost_mean_2 << "," << v_max_mean_2 << "," << a_max_mean_2 << "\n";
         csv_purple<< M << "," << d3_mean*1000 << "," << t_lap_mean_3 << "," << cost_mean_3 << "," << v_max_mean_3 << "," << a_max_mean_3 << "\n";
+        csv_green << M << "," << d4_mean*1000 << "," << t_lap_mean_4 << "," << cost_mean_4 << "," << v_max_mean_4 << "," << a_max_mean_4 << "\n";
     }
     
     csv_red.close();
-    csv_green.close();
+    csv_yellow.close();
     csv_blue.close();
     csv_purple.close();
+    csv_green.close();
 
     std::cout << "-------------------------------------" << std::endl;
     std::cout << "All statistical results saved to CSV files." << std::endl;
