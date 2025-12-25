@@ -116,7 +116,7 @@ public:
         else if (id == 1)
         {
             trajMarker.color.r = 1.00;
-            trajMarker.color.g = 1.00;
+            trajMarker.color.g = 0.65;
             trajMarker.color.b = 0.00;
         }        
         else if (id == 2)
@@ -319,8 +319,8 @@ int main(int argc, char **argv)
     Vector3d zeroVec(0.0, 0.0, 0.0);
     Trajectory traj;
     Rate lp(0.25);
-    int M_max = 7;
-    int groupSize = 1;
+    int M_max = 16;
+    int groupSize = 100;
 
     std::chrono::high_resolution_clock::time_point tc0, tc1;
     double d0, d1, d2, d3, d4, d0_sum, d1_sum, d2_sum, d3_sum, d4_sum, d0_mean = 0.0, d1_mean = 0.0, d2_mean = 0.0, d3_mean = 0.0, d4_mean = 0.0;
@@ -340,7 +340,7 @@ int main(int argc, char **argv)
     std::ofstream csv_purple(result_dir + "PURPLE_constrained_spatial_constrained_trapezoidal.csv");
     std::ofstream csv_green(result_dir + "GREEN_constrained-AM_with_whole_scale.csv");
 
-    for (int M = 5; M < M_max && ok(); M++)    // 段数
+    for (int M = 2; M < M_max && ok(); M++)    // 段数
     {
         d0_sum = 0.0; d1_sum = 0.0; d2_sum = 0.0; d3_sum = 0.0; d4_sum = 0.0;
         t_lap_sum_0 = 0.0; t_lap_sum_1 = 0.0; t_lap_sum_2 = 0.0; t_lap_sum_3 = 0.0; t_lap_sum_4 = 0.0;
@@ -407,7 +407,7 @@ int main(int argc, char **argv)
             v_max_sum_1 += v_max_1;
             a_max_1 = traj.getMaxAccRate();
             a_max_sum_1 += a_max_1;
-            viz.visualize(traj, route, 2);
+            viz.visualize(traj, route, 1);
             // std::cout << "YELLOW: Constrained AM Spatial-Temporal Optimal Trajectory" << std::endl
             //           << "      Planning time:" << d1*1000 << " ms" << std::endl
             //           << "      Lap Time: " << t_lap_1 << " s" << std::endl

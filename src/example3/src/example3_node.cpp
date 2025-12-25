@@ -117,7 +117,7 @@ public:
         else if (id == 1)
         {
             trajMarker.color.r = 1.00;
-            trajMarker.color.g = 1.00;
+            trajMarker.color.g = 0.65;
             trajMarker.color.b = 0.00;
         }        
         else if (id == 2)
@@ -476,7 +476,7 @@ int main(int argc, char **argv)
     std::string result_dir = pkg_path + "/results/";
 
     std::ofstream csv_red(result_dir + "RED_Un-constrained-AM.csv");
-    std::ofstream csv_yellow(result_dir + "YELLOW_Un-constrained-NLOPT.csv");
+    std::ofstream csv_blue(result_dir + "BLUE_Un-constrained-NLOPT.csv");
 
     for (int M = 2; M < M_max && ok(); M++)    // 段数
     {
@@ -490,8 +490,8 @@ int main(int argc, char **argv)
         {
             // std::ofstream csv_red_vel(result_dir + "RED_Un-constrained-AM_vel.csv");
             // std::ofstream csv_red_acc(result_dir + "RED_Un-constrained-AM_acc.csv");
-            // std::ofstream csv_yellow_vel(result_dir + "YELLOW_Un-constrained-NLOPT-vel.csv");
-            // std::ofstream csv_yellow_acc(result_dir + "YELLOW_Un-constrained-NLOPT-acc.csv");
+            // std::ofstream csv_blue_vel(result_dir + "BLUE_Un-constrained-NLOPT-vel.csv");
+            // std::ofstream csv_blue_acc(result_dir + "BLUE_Un-constrained-NLOPT-acc.csv");
 
 
             std::cout << "---------------------------------------------------------------------------------------" << std::endl;
@@ -590,8 +590,8 @@ int main(int argc, char **argv)
             v_max_sum_1 += v_max_1;
             a_max_1 = traj_GD.getMaxAccRate();
             a_max_sum_1 += a_max_1;
-            // viz.visualize(traj_GD, route, 1);
-            // std::cout << "YELLOW: Un-constrained-NLOPT Spatial-Temporal Optimal Trajectory " << std::endl
+            // viz.visualize(traj_GD, route, 2);
+            // std::cout << "BLUE: Un-constrained-NLOPT Spatial-Temporal Optimal Trajectory " << std::endl
             //           << "      Planning time:" << d1*1000 << " ms" << std::endl
             //           << "      Lap Time: " << t_lap_1 << " s" << std::endl
             //           << "      Cost: " << cost_1 << std::endl
@@ -601,11 +601,11 @@ int main(int argc, char **argv)
             // for(double t_cur = 0.0; t_cur <= t_lap_1; t_cur += 0.01)
             // {
                 
-            //     csv_yellow_vel << t_cur << "," << traj.getVel(t_cur).norm() << "\n";
-            //     csv_yellow_acc << t_cur << "," << traj.getAcc(t_cur).norm() << "\n";
+            //     csv_blue_vel << t_cur << "," << traj.getVel(t_cur).norm() << "\n";
+            //     csv_blue_acc << t_cur << "," << traj.getAcc(t_cur).norm() << "\n";
             // }
-            // csv_yellow_vel.close();
-            // csv_yellow_acc.close();
+            // csv_blue_vel.close();
+            // csv_blue_acc.close();
             
 
             // spinOnce();
@@ -635,7 +635,7 @@ int main(int argc, char **argv)
         << "      Maximum Velocity Rate mean: " << v_max_mean_0 << " m/s" << std::endl
         << "      Maximum Acceleration Rate mean: " << a_max_mean_0 << " m/s^2" << std::endl;
 
-        std::cout << "YELLOW:" << std::endl
+        std::cout << "BLUE:" << std::endl
         << "      Planning time mean: " << d1_mean*1000 << " ms" << std::endl
         << "      Lap Time mean: " << t_lap_mean_1 << " s" << std::endl
         << "      Cost mean: " << cost_mean_1 << std::endl
@@ -645,12 +645,12 @@ int main(int argc, char **argv)
 
         // 将平均值写入 CSV
         csv_red   << M << "," << d0_mean*1000 << "," << t_lap_mean_0 << "," << cost_mean_0 << "," << v_max_mean_0 << "," << a_max_mean_0 << "\n";
-        csv_yellow<< M << "," << d1_mean*1000 << "," << t_lap_mean_1 << "," << cost_mean_1 << "," << v_max_mean_1 << "," << a_max_mean_1 << "\n";
+        csv_blue  << M << "," << d1_mean*1000 << "," << t_lap_mean_1 << "," << cost_mean_1 << "," << v_max_mean_1 << "," << a_max_mean_1 << "\n";
 
     }
 
     csv_red.close();
-    csv_yellow.close();
+    csv_blue.close();
 
     std::cout << "-------------------------------------" << std::endl;
     std::cout << "All statistical results saved to CSV files." << std::endl;
