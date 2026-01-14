@@ -85,13 +85,13 @@ void MavGlobalPlanner::targetCallBack(const geometry_msgs::PoseStamped::ConstPtr
         // 考虑中间点
         vector<Vector3d> waypoints = {
             s,
-            Vector3d(-1, -5, 1),
-            Vector3d(14, -8, 2),
+            Vector3d(-1, -13, 3),
+            Vector3d(10, -8, 3),
             Vector3d(6, 3, 3),
-            Vector3d(5, 12, 3),
-            Vector3d(-3, 3, 3),
-            Vector3d(-13, 7, 1),
-            Vector3d(-8, -1, 2),
+            Vector3d(5, 6, 3),
+            Vector3d(-3, 5, 2),
+            Vector3d(-13, 7, 3),
+            Vector3d(-8, -1, 3),
             s
         };
         vector<Vector3d> route_temp;
@@ -110,14 +110,34 @@ void MavGlobalPlanner::targetCallBack(const geometry_msgs::PoseStamped::ConstPtr
             Vector3d finVel, finAcc;
             finVel.setZero();
             finAcc.setZero();
-            Trajectory traj = trajGen.generate(route, curOdomVel, curOdomAcc, finVel, finAcc);  // 根据Odom获取当前速度、加速度 进行轨迹生成
 
-            if (traj.getPieceNum() > 0)
+            Trajectory traj_cons_AM = trajGen.generate(route, curOdomVel, curOdomAcc, finVel, finAcc, 3);  // 根据Odom获取当前速度、加速度 进行轨迹生成
+            if (traj_cons_AM.getPieceNum() > 0)
             {
                 quadrotor_msgs::PolynomialTrajectory trajMsg;
-                polynomialTrajConverter(traj, trajMsg, Eigen::Isometry3d::Identity(), odomStamp);
+                polynomialTrajConverter(traj_cons_AM, trajMsg, Eigen::Isometry3d::Identity(), odomStamp);
                 trajPub.publish(trajMsg);
-                visualization.visualize(traj, route, ros::Time::now());
+                visualization.visualize(traj_cons_AM, route, ros::Time::now(), 1);                
+            }
+
+            Trajectory traj_cons_AM_with_scale = trajGen.generate(route, curOdomVel, curOdomAcc, finVel, finAcc, 2);
+            if (traj_cons_AM_with_scale.getPieceNum() > 0)
+            {
+                quadrotor_msgs::PolynomialTrajectory trajMsg;
+                polynomialTrajConverter(traj_cons_AM_with_scale, trajMsg, Eigen::Isometry3d::Identity(), odomStamp);
+                trajPub.publish(trajMsg);
+                visualization.visualize(traj_cons_AM_with_scale, route, ros::Time::now(), 4);
+                std::cout << "t_lap: " << traj_cons_AM_with_scale.getTotalDuration() << std::endl;
+            }
+
+            Trajectory traj_cons_NLOT = trajGen.generate(route, curOdomVel, curOdomAcc, finVel, finAcc, 5);
+            if (traj_cons_NLOT.getPieceNum() > 0)
+            {
+                quadrotor_msgs::PolynomialTrajectory trajMsg;
+                polynomialTrajConverter(traj_cons_NLOT, trajMsg, Eigen::Isometry3d::Identity(), odomStamp);
+                trajPub.publish(trajMsg);
+                visualization.visualize(traj_cons_NLOT, route, ros::Time::now(), 2);
+                std::cout << "t_lap: " << traj_cons_NLOT.getTotalDuration() << std::endl;
             }
         }
     }
@@ -201,11 +221,11 @@ Visualization::Visualization(Config &conf, NodeHandle &nh_)
     appliedTrajectoryPub = nh.advertise<visualization_msgs::Marker>("/fsto/visualization/applied_trajectory", 1);
 }
 
-void Visualization::visualize(const Trajectory &appliedTraj, const vector<Vector3d> &route, Time timeStamp)
+void Visualization::visualize(const Trajectory &appliedTraj, const vector<Vector3d> &route, Time timeStamp, int id)
 {
     visualization_msgs::Marker routeMarker, wayPointsMarker, appliedTrajMarker;
 
-    routeMarker.id = 0;
+    routeMarker.id = id;
     routeMarker.type = visualization_msgs::Marker::LINE_LIST;
     routeMarker.header.stamp = timeStamp;
     routeMarker.header.frame_id = config.odomFrame;
@@ -216,7 +236,7 @@ void Visualization::visualize(const Trajectory &appliedTraj, const vector<Vector
     routeMarker.color.g = 0.00;
     routeMarker.color.b = 0.00;
     routeMarker.color.a = 1.00;
-    routeMarker.scale.x = 0.05;
+    routeMarker.scale.x = 0.10;
 
     wayPointsMarker = routeMarker;
     wayPointsMarker.type = visualization_msgs::Marker::SPHERE_LIST;
@@ -230,13 +250,40 @@ void Visualization::visualize(const Trajectory &appliedTraj, const vector<Vector
 
     appliedTrajMarker = routeMarker;
     appliedTrajMarker.header.frame_id = config.odomFrame;
-    appliedTrajMarker.id = 0;
+    appliedTrajMarker.id = id;
     appliedTrajMarker.ns = "applied_trajectory";
-    appliedTrajMarker.color.r = 0.00;
-    appliedTrajMarker.color.g = 0.50;
-    appliedTrajMarker.color.b = 1.00;
-    appliedTrajMarker.scale.x = 0.07;
-
+    appliedTrajMarker.scale.x = 0.15;
+    if (id == 0)
+    {
+        appliedTrajMarker.color.r = 0.85;
+        appliedTrajMarker.color.g = 0.10;
+        appliedTrajMarker.color.b = 0.10;
+    }
+    else if (id == 1)
+    {
+        appliedTrajMarker.color.r = 1.00;
+        appliedTrajMarker.color.g = 0.65;
+        appliedTrajMarker.color.b = 0.00;
+    }        
+    else if (id == 2)
+    {
+        appliedTrajMarker.color.r = 0.00;
+        appliedTrajMarker.color.g = 0.45;
+        appliedTrajMarker.color.b = 0.74;
+    }
+    else if (id == 3)
+    {
+        appliedTrajMarker.color.r = 1.00;
+        appliedTrajMarker.color.g = 0.00;
+        appliedTrajMarker.color.b = 1.00;            
+    }
+    else
+    {
+        appliedTrajMarker.color.r = 0.10;
+        appliedTrajMarker.color.g = 0.65;
+        appliedTrajMarker.color.b = 0.10;
+    }
+        
     if (route.size() > 0)
     {
         bool first = true;

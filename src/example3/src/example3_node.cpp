@@ -303,143 +303,6 @@ private:
     std::uniform_real_distribution<double> uniformReal;
 };
 
-// 保存系数矩阵到 CSV 文件
-void saveCoeffMatsToCSV(const std::vector<CoefficientMat> &coeffMats, const std::string &filename)
-{
-    std::ofstream file(filename);
-    if (!file.is_open())
-    {
-        std::cerr << "Failed to open file: " << filename << std::endl;
-        return;
-    }
-
-    file << std::setprecision(10);  // 高精度输出
-
-    for (size_t i = 0; i < coeffMats.size(); ++i)
-    {
-        file << "Coefficient Matrix " << i << std::endl;
-        for (int r = 0; r < coeffMats[i].rows(); ++r)
-        {
-            for (int c = 0; c < coeffMats[i].cols(); ++c)
-            {
-                file << coeffMats[i](r, c);
-                if (c < coeffMats[i].cols() - 1)
-                    file << ",";
-            }
-            file << "\n";
-        }
-        if (i < coeffMats.size() - 1)
-            file << "\n";  // 不同分段之间空一行
-    }
-
-    file.close();
-    std::cout << "Saved coefficient matrices to " << filename << std::endl;
-}
-
-void saveLossTOCSV(const std::vector<double> &loss, const std::string &filename)
-{
-    std::ofstream file(filename);
-    if (!file.is_open())
-    {
-        std::cerr << "Failed to open file: " << filename << std::endl;
-        return;
-    }
-    file << std::setprecision(10);  // 高精度输出
-
-    for (size_t i = 0; i < loss.size(); ++i)
-    {
-        file << loss[i] << std::endl;
-    }
-
-    file.close();
-    std::cout << "Saved loss to " << filename << std::endl;
-}
-
-void unconstrainedAM(const AmTraj &amTrajOpt, const std::vector<Eigen::Vector3d> &route, Trajectory &traj,
-                        Eigen::Vector3d iniVel, Eigen::Vector3d iniAcc,
-                        Eigen::Vector3d finVel, Eigen::Vector3d finAcc,
-                        Visualizer viz)
-{
-    std::string pkg_path = ros::package::getPath("example3");
-    std::string result_dir = pkg_path + "/results/";
-
-    std::vector<double> loss;
-    std::vector<double> durations = amTrajOpt.allocateTime(route, 1.0);
-    std::vector<CoefficientMat> coeffMats;
-    bool inTol;
-    std::vector<double> lastDurations = durations;
-    
-    for (int i = 0; i < amTrajOpt.maxIterations; i++)
-    {
-        // Unconstrained alternating minimization between durations and coeffMats
-        coeffMats = amTrajOpt.optimizeCoeffs(route, durations, iniVel, iniAcc, finVel, finAcc);
-        traj = Trajectory(durations, coeffMats);
-
-        // // 迭代结果可视化
-        // std::cout << "Initial coeffMats:" << std::endl;
-        // for (size_t i = 0; i < coeffMats.size(); ++i) {
-        //     std::cout << "coeffMats[" << i << "] =\n"
-        //             << coeffMats[i] << std::endl << std::endl;
-        // }
-        // viz.visualize(traj, route, 1);
-        // sleep(1.0);
-        // std:: cout << "Iteration: " << i << std::endl
-        //            << "Cost: " << amTrajOpt.evaluateObjective(traj) << std::endl;
-
-        loss.push_back(amTrajOpt.evaluateObjective(traj));
-
-        amTrajOpt.optimizeDurations(traj, false);
-        durations = traj.getDurations();
-        // Check if tol fulfilled
-        inTol = true;
-        double diffDuration;
-        for (int j = 0; j < traj.getPieceNum(); j++)
-        {
-            diffDuration = fabs(durations[j] - lastDurations[j]);
-            // Rel tol for each piece is used here
-            if (lastDurations[j] * amTrajOpt.epsilon < diffDuration)
-            {
-                inTol = false;
-                break;
-            }
-        }
-        if (inTol)
-        {
-            break;
-        }
-
-        lastDurations = durations;
-    }
-    // Although the unconstrained minimum can be reached in both directions,
-    // we find that the minimum in "Coeffs Direction" is smoother than the
-    // minimum in "Durations Direction" in most cases. Therefore, we choose
-    // the smoother one in the given relative tolerance.
-    coeffMats = amTrajOpt.optimizeCoeffs(route, durations, iniVel, iniAcc, finVel, finAcc);
-    traj = Trajectory(durations, coeffMats);
-    
-    // // 迭代结果可视化
-    // std::cout << "Optimal coeffMats:" << std::endl;
-    // for (size_t i = 0; i < coeffMats.size(); ++i) {
-    //     std::cout << "coeffMats[" << i << "] =\n"
-    //             << coeffMats[i] << std::endl << std::endl;
-    // }
-    // viz.visualize(traj, route, 1);
-    // sleep(1.0);
-    // std::cout << "Optimal coeffMats:矩阵验证:" << std::endl;
-    // coeffMats = traj.getCoeffMats();
-    // for (size_t i = 0; i < coeffMats.size(); ++i) {
-    //     std::cout << "coeffMats[" << i << "] =\n"
-    //             << coeffMats[i] << std::endl << std::endl;
-    // }
-
-    // loss.push_back(amTrajOpt.evaluateObjective(traj));
-    // saveLossTOCSV(loss, result_dir + "unconstrained_AM-cost.csv");
-    // // saveCoeffMatsToCSV(coeffMats, "/home/peng/Desktop/am_traj_Peng/results/Optimal_abs_coeffMats_unconstrained_AM.csv");
-    // saveCoeffMatsToCSV(traj.getCoeffMats(true), "/home/peng/Desktop/am_traj_Peng/results/Optimal_normed_coeffMats_unconstrained_AM.csv");
-
-}
-
-
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "example3_node");
@@ -451,14 +314,12 @@ int main(int argc, char **argv)
     Visualizer viz(config, nh_);    // 可视化类
     RandomRouteGenerator routeGen(Array3d(-16, -16, 0), Array3d(16, 16, 16));
 
-    AmTraj amTrajOpt(config.weightT, config.weightAcc, config.weightJerk,
-                     config.maxVelRate, config.maxAccRate, config.iterations, config.epsilon);
 
     vector<Vector3d> route;
     Vector3d zeroVec(0.0, 0.0, 0.0);
     Trajectory traj, traj_GD;
-    Rate lp(0.25);
-    int M_max = 16;
+    Rate lp(0.5);
+    int M_max = 100;
     int groupSize = 100;
     std::vector<double> durs;
     durs.clear();
@@ -475,8 +336,8 @@ int main(int argc, char **argv)
     std::string pkg_path = ros::package::getPath("example3");
     std::string result_dir = pkg_path + "/results/";
 
-    std::ofstream csv_red(result_dir + "RED_Un-constrained-AM.csv");
-    std::ofstream csv_blue(result_dir + "BLUE_Un-constrained-NLOPT.csv");
+    std::ofstream csv_red(result_dir + "RED_analytic.csv");
+    std::ofstream csv_blue(result_dir + "BLUE_gd.csv");
 
     for (int M = 2; M < M_max && ok(); M++)    // 段数
     {
@@ -488,27 +349,28 @@ int main(int argc, char **argv)
 
         for (int j = 0; j < groupSize && ok(); j++)
         {
-            // std::ofstream csv_red_vel(result_dir + "RED_Un-constrained-AM_vel.csv");
-            // std::ofstream csv_red_acc(result_dir + "RED_Un-constrained-AM_acc.csv");
-            // std::ofstream csv_blue_vel(result_dir + "BLUE_Un-constrained-NLOPT-vel.csv");
-            // std::ofstream csv_blue_acc(result_dir + "BLUE_Un-constrained-NLOPT-acc.csv");
-
+            // route.clear();
+            // for (int i = 0; i < 1; i++){
+            //     // route.push_back(Vector3d(0.0, 0.0, 5.0));
+            //     // route.push_back(Vector3d(5.0, 0.0, 5.0));
+            //     // route.push_back(Vector3d(5.0, 5.0, 5.0));
+            //     // route.push_back(Vector3d(0.0, 5.0, 5.0));
+            //     // route.push_back(Vector3d(0.0, 0.0, 5.0));
+            //     route.push_back(Vector3d(-10.0, 0.0, 5.0));
+            //     route.push_back(Vector3d(-5.0, -5.0, 5.0));
+            //     route.push_back(Vector3d(0.0, 0.0, 5.0));
+            //     route.push_back(Vector3d(5.0, 5.0, 5.0));
+            //     route.push_back(Vector3d(10.0, 0.0, 5.0));
+            // }
+            route = routeGen.generate(M);
 
             std::cout << "---------------------------------------------------------------------------------------" << std::endl;
             std::cout << "Number of Segments: " << M << ", Group: " << j+1 << std::endl;
 
-            // for (int i = 0; i < 1; i++){
-            //     route.push_back(Vector3d(0.0, 0.0, 5.0));
-            //     route.push_back(Vector3d(5.0, 0.0, 5.0));
-            //     route.push_back(Vector3d(5.0, 5.0, 5.0));
-            //     route.push_back(Vector3d(0.0, 5.0, 5.0));
-            //     route.push_back(Vector3d(0.0, 0.0, 5.0));
-            // }
-            route = routeGen.generate(M);
-
-
+            AmTraj amTrajOpt(config.weightT, config.weightAcc, config.weightJerk,
+                            config.maxVelRate, config.maxAccRate, config.iterations, config.epsilon);
             tc0 = std::chrono::high_resolution_clock::now();
-            traj = amTrajOpt.genOptimalTrajDTs3(route, zeroVec, zeroVec, zeroVec, zeroVec);   // 只实现了 s=3
+            traj = amTrajOpt.genOptimalTrajDs3(route, zeroVec, zeroVec, zeroVec, zeroVec);   // 只实现了 s=3
             tc1 = std::chrono::high_resolution_clock::now();
             d0 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count(); 
             d0_sum += d0;
@@ -520,23 +382,64 @@ int main(int argc, char **argv)
             v_max_sum_0 += v_max_0;
             a_max_0 = traj.getMaxAccRate();
             a_max_sum_0 += a_max_0;
-            // viz.visualize(traj, route, 0);
-            // std::cout << "RED: Un-constrained AM Spatial-Temporal Optimal Trajectory" << std::endl
-            //           << "      Planning time:" << d0*1000 << " ms" << std::endl
-            //           << "      Lap Time: " << t_lap_0 << " s" << std::endl
-            //           << "      Cost: " << cost_0 << std::endl
-            //           << "      Maximum Velocity Rate: " << v_max_0 << " m/s" << std::endl
-            //           << "      Maximum Acceleration Rate: " << a_max_0 << " m/s^2" << std::endl;
-            // 保存 速度，加速度曲线，用于MATLAB绘制
-            // for(double t_cur = 0.0; t_cur <= t_lap_0; t_cur += 0.01)
-            // {
-                
-            //     csv_red_vel << t_cur << "," << traj.getVel(t_cur).norm() << "\n";
-            //     csv_red_acc << t_cur << "," << traj.getAcc(t_cur).norm() << "\n";
+            viz.visualize(traj, route, 4);
+            std::cout << "RED: Un-constrained none-AM Spatial-Temporal Optimal Trajectory" << std::endl
+                      << "      Planning time:" << d0*1000 << " ms" << std::endl
+                      << "      Lap Time: " << t_lap_0 << " s" << std::endl
+                      << "      Cost: " << cost_0 << std::endl
+                      << "      Maximum Velocity Rate: " << v_max_0 << " m/s" << std::endl
+                      << "      Maximum Acceleration Rate: " << a_max_0 << " m/s^2" << std::endl;
+            // durs = traj.getDurations();
+            // // 计算总时间
+            // double total_time = std::accumulate(durs.begin(), durs.end(), 0.0);
+            // // 数值安全性检查
+            // if (total_time <= 0.0) {
+            //     std::cerr << "Error: total_time must be positive." << std::endl;
+            //     return -1;
             // }
-            // csv_red_vel.close();
-            // csv_red_acc.close();
+            // // 打印比例
+            // std::cout << std::fixed << std::setprecision(6);
+            // for (size_t i = 0; i < durs.size(); ++i) {
+            //     double ratio = durs[i] / total_time;
+            //     std::cout << "      dur[" << i << "] / total = " << ratio << std::endl;
+            // }
 
+
+            amTrajOpt.epsilon = config.epsilon*10;
+            tc0 = std::chrono::high_resolution_clock::now();
+            traj = amTrajOpt.genOptimalTrajDs3(route, zeroVec, zeroVec, zeroVec, zeroVec);  // 只实现了 s=3
+            tc1 = std::chrono::high_resolution_clock::now();
+            d1 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count(); 
+            d1_sum += d1;
+            t_lap_1 = traj.getTotalDuration();
+            t_lap_sum_1 += t_lap_1;
+            cost_1 = amTrajOpt.evaluateObjective(traj);
+            cost_sum_1 += cost_1;
+            v_max_1 = traj.getMaxVelRate();
+            v_max_sum_1 += v_max_1;
+            a_max_1 = traj.getMaxAccRate();
+            a_max_sum_1 += a_max_1;
+            viz.visualize(traj, route, 1);
+            std::cout << "YELLOW: Un-Constrained AM Spatial-Temporal Optimal Trajectory" << std::endl
+                      << "      Planning time:" << d1*1000 << " ms" << std::endl
+                      << "      Lap Time: " << t_lap_1 << " s" << std::endl
+                      << "      Cost: " << cost_1 << std::endl
+                      << "      Maximum Velocity Rate: " << v_max_1 << " m/s" << std::endl
+                      << "      Maximum Acceleration Rate: " << a_max_1 << " m/s^2" << std::endl;
+            // durs = traj.getDurations();
+            // // 计算总时间
+            // total_time = std::accumulate(durs.begin(), durs.end(), 0.0);
+            // // 数值安全性检查
+            // if (total_time <= 0.0) {
+            //     std::cerr << "Error: total_time must be positive." << std::endl;
+            //     return -1;
+            // }
+            // // 打印比例
+            // std::cout << std::fixed << std::setprecision(6);
+            // for (size_t i = 0; i < durs.size(); ++i) {
+            //     double ratio = durs[i] / total_time;
+            //     std::cout << "      dur[" << i << "] / total = " << ratio << std::endl;
+            // }
 
             mav_trajectory_generation::Vertex::Vector vertices;
             const int dimension = 3;
@@ -558,13 +461,13 @@ int main(int argc, char **argv)
             parameters.max_iterations = 1000;
             parameters.f_rel = 0.05;
             parameters.x_rel = 0.1;
-            parameters.time_penalty = config.weightT;
+            parameters.time_penalty = amTrajOpt.wTime;
             parameters.use_soft_constraints = false;
             parameters.print_debug_info = false;
             parameters.print_debug_info_time_allocation = false;
             parameters.initial_stepsize_rel = 0.1;
             parameters.inequality_constraint_tolerance = 0.1;
-            parameters.time_alloc_method = mav_trajectory_generation::NonlinearOptimizationParameters::kRichterTimeAndConstraints;
+            parameters.time_alloc_method = mav_trajectory_generation::NonlinearOptimizationParameters::kRichterTime;
             
             std::vector<double> segment_times;
             const double v_max = config.maxVelRate;
@@ -580,52 +483,73 @@ int main(int argc, char **argv)
             opt.optimize();
             tc1 = std::chrono::high_resolution_clock::now();
             mav_traj2am_traj(opt, durs, traj_GD);
-            d1 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count(); 
-            d1_sum += d1;
-            t_lap_1 = traj_GD.getTotalDuration();
-            t_lap_sum_1 += t_lap_1;
-            cost_1 = amTrajOpt.evaluateObjective(traj_GD);
-            cost_sum_1 += cost_1;
-            v_max_1 = traj_GD.getMaxVelRate();
-            v_max_sum_1 += v_max_1;
-            a_max_1 = traj_GD.getMaxAccRate();
-            a_max_sum_1 += a_max_1;
-            // viz.visualize(traj_GD, route, 2);
-            // std::cout << "BLUE: Un-constrained-NLOPT Spatial-Temporal Optimal Trajectory " << std::endl
-            //           << "      Planning time:" << d1*1000 << " ms" << std::endl
-            //           << "      Lap Time: " << t_lap_1 << " s" << std::endl
-            //           << "      Cost: " << cost_1 << std::endl
-            //           << "      Maximum Velocity Rate: " << v_max_1 << " m/s" << std::endl
-            //           << "      Maximum Acceleration Rate: " << a_max_1 << " m/s^2" << std::endl;
-            // 保存 速度，加速度曲线，用于MATLAB绘制
-            // for(double t_cur = 0.0; t_cur <= t_lap_1; t_cur += 0.01)
-            // {
-                
-            //     csv_blue_vel << t_cur << "," << traj.getVel(t_cur).norm() << "\n";
-            //     csv_blue_acc << t_cur << "," << traj.getAcc(t_cur).norm() << "\n";
+            d2 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count(); 
+            d2_sum += d2;
+            t_lap_2 = traj_GD.getTotalDuration();
+            t_lap_sum_2 += t_lap_2;
+            cost_2 = amTrajOpt.evaluateObjective(traj_GD);
+            cost_sum_2 += cost_2;
+            v_max_2 = traj_GD.getMaxVelRate();
+            v_max_sum_2 += v_max_2;
+            a_max_2 = traj_GD.getMaxAccRate();
+            a_max_sum_2 += a_max_2;
+            viz.visualize(traj_GD, route, 2);
+            std::cout << "BLUE: Un-constrained-NLOPT Spatial-Temporal Optimal Trajectory " << std::endl
+                      << "      Planning time:" << d2*1000 << " ms" << std::endl
+                      << "      Lap Time: " << t_lap_2 << " s" << std::endl
+                      << "      Cost-amtraj: " << cost_2 << std::endl
+                      << "      Cost-nlopt: " << opt.getCost() << "+" << amTrajOpt.wTime*t_lap_2 << std::endl
+                      << "      Maximum Velocity Rate: " << v_max_2 << " m/s" << std::endl
+                      << "      Maximum Acceleration Rate: " << a_max_2 << " m/s^2" << std::endl;
+            // durs = traj_GD.getDurations();
+            // // 计算总时间
+            // total_time = std::accumulate(durs.begin(), durs.end(), 0.0);
+            // // 数值安全性检查
+            // if (total_time <= 0.0) {
+            //     std::cerr << "Error: total_time must be positive." << std::endl;
+            //     return -1;
             // }
-            // csv_blue_vel.close();
-            // csv_blue_acc.close();
-            
+            // // 打印比例
+            // std::cout << std::fixed << std::setprecision(6);
+            // for (size_t i = 0; i < durs.size(); ++i) {
+            //     double ratio = durs[i] / total_time;
+            //     std::cout << "      dur[" << i << "] / total = " << ratio << std::endl;
+            // }            
 
             // spinOnce();
             // lp.sleep();
         }
-        // 计算平均Planning time，Lap Time，Cost， Maximum Velocity Rate， Maximum Acceleration Rate 并保存为csv
+        // 计算平均Planning time，Lap Time，Cost， Maximum Velocity Rate， Maximum Acceleration Rate 并保存为csv    
         d0_mean = d0_sum / groupSize;
         d1_mean = d1_sum / groupSize;
+        d2_mean = d2_sum / groupSize;
+        d3_mean = d3_sum / groupSize;
+        d4_mean = d4_sum / groupSize;
 
         t_lap_mean_0 = t_lap_sum_0 / groupSize;
         t_lap_mean_1 = t_lap_sum_1 / groupSize;
+        t_lap_mean_2 = t_lap_sum_2 / groupSize;
+        t_lap_mean_3 = t_lap_sum_3 / groupSize;
+        t_lap_mean_4 = t_lap_sum_4 / groupSize;
 
         cost_mean_0 = cost_sum_0 / groupSize;
         cost_mean_1 = cost_sum_1 / groupSize;
+        cost_mean_2 = cost_sum_2 / groupSize;
+        cost_mean_3 = cost_sum_3 / groupSize;
+        cost_mean_4 = cost_sum_4 / groupSize;
 
         v_max_mean_0 = v_max_sum_0 / groupSize;
         v_max_mean_1 = v_max_sum_1 / groupSize;
+        v_max_mean_2 = v_max_sum_2 / groupSize;
+        v_max_mean_3 = v_max_sum_3 / groupSize;
+        v_max_mean_4 = v_max_sum_4 / groupSize;
 
         a_max_mean_0 = a_max_sum_0 / groupSize;
         a_max_mean_1 = a_max_sum_1 / groupSize;
+        a_max_mean_2 = a_max_sum_2 / groupSize;
+        a_max_mean_3 = a_max_sum_3 / groupSize;
+        a_max_mean_4 = a_max_sum_4 / groupSize;
+
 
         std::cout << "-------------------------------------Statistical---------------------------------------" << std::endl;
         std::cout << "RED:" << std::endl
@@ -635,17 +559,24 @@ int main(int argc, char **argv)
         << "      Maximum Velocity Rate mean: " << v_max_mean_0 << " m/s" << std::endl
         << "      Maximum Acceleration Rate mean: " << a_max_mean_0 << " m/s^2" << std::endl;
 
-        std::cout << "BLUE:" << std::endl
+        std::cout << "YELLOW:" << std::endl
         << "      Planning time mean: " << d1_mean*1000 << " ms" << std::endl
         << "      Lap Time mean: " << t_lap_mean_1 << " s" << std::endl
         << "      Cost mean: " << cost_mean_1 << std::endl
         << "      Maximum Velocity Rate mean: " << v_max_mean_1 << " m/s" << std::endl
         << "      Maximum Acceleration Rate mean: " << a_max_mean_1 << " m/s^2" << std::endl;
 
+        std::cout << "BLUE:" << std::endl
+        << "      Planning time mean: " << d2_mean*1000 << " ms" << std::endl
+        << "      Lap Time mean: " << t_lap_mean_2 << " s" << std::endl
+        << "      Cost mean: " << cost_mean_2 << std::endl
+        << "      Maximum Velocity Rate mean: " << v_max_mean_2 << " m/s" << std::endl
+        << "      Maximum Acceleration Rate mean: " << a_max_mean_2 << " m/s^2" << std::endl;
+
 
         // 将平均值写入 CSV
         csv_red   << M << "," << d0_mean*1000 << "," << t_lap_mean_0 << "," << cost_mean_0 << "," << v_max_mean_0 << "," << a_max_mean_0 << "\n";
-        csv_blue  << M << "," << d1_mean*1000 << "," << t_lap_mean_1 << "," << cost_mean_1 << "," << v_max_mean_1 << "," << a_max_mean_1 << "\n";
+        csv_blue  << M << "," << d2_mean*1000 << "," << t_lap_mean_1 << "," << cost_mean_1 << "," << v_max_mean_2 << "," << a_max_mean_2 << "\n";
 
     }
 

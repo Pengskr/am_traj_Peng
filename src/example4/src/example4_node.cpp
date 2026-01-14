@@ -459,7 +459,7 @@ int main(int argc, char **argv)
     Trajectory traj, traj_GD;
     Rate lp(0.25);
     int M_max = 16;
-    int groupSize = 1;
+    int groupSize = 10;
     std::vector<double> durs;
     durs.clear();
 
@@ -562,7 +562,7 @@ int main(int argc, char **argv)
             parameters.f_rel = 0.05;
             parameters.x_rel = 0.1;
             parameters.time_penalty = config.weightT;
-            parameters.use_soft_constraints = false;
+            parameters.use_soft_constraints = true;
             parameters.print_debug_info = false;
             parameters.print_debug_info_time_allocation = false;
             parameters.initial_stepsize_rel = 0.1;
@@ -583,7 +583,7 @@ int main(int argc, char **argv)
             opt.optimize();
             tc1 = std::chrono::high_resolution_clock::now();
             mav_traj2am_traj(opt, durs, traj_GD);
-            // 优化结果有问题，常违背约束
+            //软约束，常违背约束
             double ratio = std::max(traj_GD.getMaxVelRate() / v_max / (1.0 - config.epsilon * config.epsilon),
                                     sqrt(traj_GD.getMaxAccRate() / a_max / (1.0 - config.epsilon * config.epsilon)));
             traj_GD.scaleTime(1 / ratio);
@@ -646,8 +646,8 @@ int main(int argc, char **argv)
             // csv_green_vel.close();
             // csv_green_acc.close();
 
-            spinOnce();
-            lp.sleep();
+            // spinOnce();
+            // lp.sleep();
         }
         // 计算平均Planning time，Lap Time，Cost， Maximum Velocity Rate， Maximum Acceleration Rate 并保存为csv
         d1_mean = d1_sum / groupSize;

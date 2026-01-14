@@ -317,10 +317,12 @@ int main(int argc, char **argv)
 
     vector<Vector3d> route;
     Vector3d zeroVec(0.0, 0.0, 0.0);
-    Trajectory traj;
+    Trajectory traj, traj_GD;
     Rate lp(0.25);
-    int M_max = 16;
+    int M_max = 7;
     int groupSize = 100;
+    std::vector<double> durs;
+    durs.clear();
 
     std::chrono::high_resolution_clock::time_point tc0, tc1;
     double d0, d1, d2, d3, d4, d0_sum, d1_sum, d2_sum, d3_sum, d4_sum, d0_mean = 0.0, d1_mean = 0.0, d2_mean = 0.0, d3_mean = 0.0, d4_mean = 0.0;
@@ -336,11 +338,11 @@ int main(int argc, char **argv)
 
     std::ofstream csv_red(result_dir + "RED_Un-constrained-AM.csv");
     std::ofstream csv_yellow(result_dir + "YELLOW_constrained-AM.csv");
-    std::ofstream csv_blue(result_dir + "BLUE_Un-constrained_spatial_with_trapezoidal.csv");
-    std::ofstream csv_purple(result_dir + "PURPLE_constrained_spatial_constrained_trapezoidal.csv");
+    std::ofstream csv_blue(result_dir + "BLUE_Un-constrained-NLOPT.csv");
+    std::ofstream csv_purple(result_dir + "PURPLE_constrained-NLOPT.csv");
     std::ofstream csv_green(result_dir + "GREEN_constrained-AM_with_whole_scale.csv");
 
-    for (int M = 2; M < M_max && ok(); M++)    // 段数
+    for (int M = 6; M < M_max && ok(); M++)    // 段数
     {
         d0_sum = 0.0; d1_sum = 0.0; d2_sum = 0.0; d3_sum = 0.0; d4_sum = 0.0;
         t_lap_sum_0 = 0.0; t_lap_sum_1 = 0.0; t_lap_sum_2 = 0.0; t_lap_sum_3 = 0.0; t_lap_sum_4 = 0.0;
@@ -354,8 +356,13 @@ int main(int argc, char **argv)
             std::ofstream csv_red_acc(result_dir + "RED_Un-constrained-AM_acc.csv");
             std::ofstream csv_yellow_vel(result_dir + "YELLOW_constrained-AM-vel.csv");
             std::ofstream csv_yellow_acc(result_dir + "YELLOW_constrained-AM-acc.csv");
+            std::ofstream csv_blue_vel(result_dir + "BLUE_Un-constrained-NLOPT-vel.csv");
+            std::ofstream csv_blue_acc(result_dir + "BLUE_Un-constrained-NLOPT-acc.csv");
+            std::ofstream csv_purple_vel(result_dir + "PURPLE_constrained-NLOPT-vel.csv");
+            std::ofstream csv_purple_acc(result_dir + "PURPLE_constrained-NLOPT-acc.csv");            
             std::ofstream csv_green_vel(result_dir + "GREEN_constrained-AM_with_whole_scale-vel.csv");
             std::ofstream csv_green_acc(result_dir + "GREEN_constrained-AM_with_whole_scale-acc.csv");
+
 
             std::cout << "---------------------------------------------------------------------------------------" << std::endl;
             std::cout << "Number of Segments: " << M << ", Group: " << j+1 << std::endl;
@@ -376,13 +383,13 @@ int main(int argc, char **argv)
             a_max_0 = traj.getMaxAccRate();
             a_max_sum_0 += a_max_0;
             viz.visualize(traj, route, 0);
-            // std::cout << "---------------------------------------------------------------------------------------" << std::endl;
-            // std::cout << "RED: Un-constrained AM Spatial-Temporal Optimal Trajectory" << std::endl
-            //           << "      Planning time:" << d0*1000 << " ms" << std::endl
-            //           << "      Lap Time: " << t_lap_0 << " s" << std::endl
-            //           << "      Cost: " << cost_0 << std::endl
-            //           << "      Maximum Velocity Rate: " << v_max_0 << " m/s" << std::endl
-            //           << "      Maximum Acceleration Rate: " << a_max_0 << " m/s^2" << std::endl;
+            std::cout << "---------------------------------------------------------------------------------------" << std::endl;
+            std::cout << "RED: Un-constrained AM Spatial-Temporal Optimal Trajectory" << std::endl
+                      << "      Planning time:" << d0*1000 << " ms" << std::endl
+                      << "      Lap Time: " << t_lap_0 << " s" << std::endl
+                      << "      Cost: " << cost_0 << std::endl
+                      << "      Maximum Velocity Rate: " << v_max_0 << " m/s" << std::endl
+                      << "      Maximum Acceleration Rate: " << a_max_0 << " m/s^2" << std::endl;
             // 保存 速度，加速度曲线，用于MATLAB绘制
             for(double t_cur = 0.0; t_cur <= t_lap_0; t_cur += 0.01)
             {
@@ -392,6 +399,7 @@ int main(int argc, char **argv)
             }
             csv_red_vel.close();
             csv_red_acc.close();
+
 
 
             tc0 = std::chrono::high_resolution_clock::now();
@@ -408,12 +416,12 @@ int main(int argc, char **argv)
             a_max_1 = traj.getMaxAccRate();
             a_max_sum_1 += a_max_1;
             viz.visualize(traj, route, 1);
-            // std::cout << "YELLOW: Constrained AM Spatial-Temporal Optimal Trajectory" << std::endl
-            //           << "      Planning time:" << d1*1000 << " ms" << std::endl
-            //           << "      Lap Time: " << t_lap_1 << " s" << std::endl
-            //           << "      Cost: " << cost_1 << std::endl
-            //           << "      Maximum Velocity Rate: " << v_max_1 << " m/s" << std::endl
-            //           << "      Maximum Acceleration Rate: " << a_max_1 << " m/s^2" << std::endl;
+            std::cout << "YELLOW: Constrained AM Spatial-Temporal Optimal Trajectory" << std::endl
+                      << "      Planning time:" << d1*1000 << " ms" << std::endl
+                      << "      Lap Time: " << t_lap_1 << " s" << std::endl
+                      << "      Cost: " << cost_1 << std::endl
+                      << "      Maximum Velocity Rate: " << v_max_1 << " m/s" << std::endl
+                      << "      Maximum Acceleration Rate: " << a_max_1 << " m/s^2" << std::endl;
             // 保存 速度，加速度曲线，用于MATLAB绘制
             for(double t_cur = 0.0; t_cur <= t_lap_1; t_cur += 0.01)
             {
@@ -424,47 +432,160 @@ int main(int argc, char **argv)
             csv_yellow_vel.close();
             csv_yellow_acc.close();
             
-            tc0 = std::chrono::high_resolution_clock::now();
-            traj = amTrajOpt.genOptimalTrajDs3(route, zeroVec, zeroVec, zeroVec, zeroVec);   // 只实现了 s=3
-            tc1 = std::chrono::high_resolution_clock::now();
-            d2 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count(); 
-            d2_sum += d2;
-            t_lap_2 = traj.getTotalDuration();
-            t_lap_sum_2 += t_lap_2;
-            cost_2 = amTrajOpt.evaluateObjective(traj);
-            cost_sum_2 += cost_2;
-            v_max_2 = traj.getMaxVelRate();
-            v_max_sum_2 += v_max_2;
-            a_max_2 = traj.getMaxAccRate();
-            a_max_sum_2 += a_max_2;
-            // viz.visualize(traj, route, 2);
-            // std::cout << "BLUE: Un-Constrained Spatial Optimal Trajectory with Trapezoidal Time Allocation" << std::endl
-            //           << "      Planning time:" << d2*1000 << " ms" << std::endl
-            //           << "      Lap Time: " << t_lap_2 << " s" << std::endl
-            //           << "      Cost: " << cost_2 << std::endl
-            //           << "      Maximum Velocity Rate: " << v_max_2 << " m/s" << std::endl
-            //           << "      Maximum Acceleration Rate: " << a_max_2 << " m/s^2" << std::endl;
+
+
+            // tc0 = std::chrono::high_resolution_clock::now();
+            // traj = amTrajOpt.genOptimalTrajDs3(route, zeroVec, zeroVec, zeroVec, zeroVec);   // 只实现了 s=3
+            // tc1 = std::chrono::high_resolution_clock::now();
+            // d2 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count(); 
+            // d2_sum += d2;
+            // t_lap_2 = traj.getTotalDuration();
+            // t_lap_sum_2 += t_lap_2;
+            // cost_2 = amTrajOpt.evaluateObjective(traj);
+            // cost_sum_2 += cost_2;
+            // v_max_2 = traj.getMaxVelRate();
+            // v_max_sum_2 += v_max_2;
+            // a_max_2 = traj.getMaxAccRate();
+            // a_max_sum_2 += a_max_2;
+            // // viz.visualize(traj, route, 2);
+            // // std::cout << "BLUE: Un-Constrained Spatial Optimal Trajectory with Trapezoidal Time Allocation" << std::endl
+            // //           << "      Planning time:" << d2*1000 << " ms" << std::endl
+            // //           << "      Lap Time: " << t_lap_2 << " s" << std::endl
+            // //           << "      Cost: " << cost_2 << std::endl
+            // //           << "      Maximum Velocity Rate: " << v_max_2 << " m/s" << std::endl
+            // //           << "      Maximum Acceleration Rate: " << a_max_2 << " m/s^2" << std::endl;
+
+            mav_trajectory_generation::Vertex::Vector vertices;
+            const int dimension = 3;
+            // const int derivative_to_optimize = mav_trajectory_generation::derivative_order::JERK;
+            const int derivative_to_optimize = 2;
+            mav_trajectory_generation::Vertex start(dimension), middle(dimension), end(dimension);
+
+            start.makeStartOrEnd(route[0], derivative_to_optimize);
+            vertices.push_back(start);
+            for (size_t k = 1; k < route.size()-1; k++)
+            {
+                middle.addConstraint(mav_trajectory_generation::derivative_order::POSITION, route[k]);
+                vertices.push_back(middle);
+            }
+            end.makeStartOrEnd(route[route.size()-1], derivative_to_optimize);
+            vertices.push_back(end);
+
+            mav_trajectory_generation::NonlinearOptimizationParameters parameters;
+            parameters.max_iterations = 1000;
+            parameters.f_rel = 0.05;
+            parameters.x_rel = 0.1;
+            parameters.time_penalty = config.weightT;
+            parameters.use_soft_constraints = false;
+            parameters.print_debug_info = false;
+            parameters.print_debug_info_time_allocation = false;
+            parameters.initial_stepsize_rel = 0.1;
+            parameters.inequality_constraint_tolerance = 0.1;
+            parameters.time_alloc_method = mav_trajectory_generation::NonlinearOptimizationParameters::kRichterTimeAndConstraints;
+            
+            std::vector<double> segment_times;
+            const double v_max = config.maxVelRate;
+            const double a_max = config.maxAccRate;
 
             tc0 = std::chrono::high_resolution_clock::now();
-            traj = amTrajOpt.genOptimalTrajDCs3(route, zeroVec, zeroVec, zeroVec, zeroVec);   // 只实现了 s=3
+            segment_times = amTrajOpt.allocateTime(route, 1.0);
+            const int N = 6;
+            mav_trajectory_generation::PolynomialOptimizationNonLinear<N> opt(dimension, parameters);
+            opt.setupFromVertices(vertices, segment_times, derivative_to_optimize);
+            // opt.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::VELOCITY, v_max);
+            // opt.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, a_max);
+            opt.optimize();
             tc1 = std::chrono::high_resolution_clock::now();
+            mav_traj2am_traj(opt, durs, traj_GD);
+            d2 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count(); 
+            d2_sum += d2;
+            t_lap_2 = traj_GD.getTotalDuration();
+            t_lap_sum_2 += t_lap_2;
+            cost_2 = amTrajOpt.evaluateObjective(traj_GD);
+            cost_sum_2 += cost_2;
+            v_max_2 = traj_GD.getMaxVelRate();
+            v_max_sum_2 += v_max_2;
+            a_max_2 = traj_GD.getMaxAccRate();
+            a_max_sum_2 += a_max_2;
+            viz.visualize(traj_GD, route, 2);
+            std::cout << "BLUE: Un-constrained-NLOPT" << std::endl
+                      << "      Planning time:" << d2*1000 << " ms" << std::endl
+                      << "      Lap Time: " << t_lap_2 << " s" << std::endl
+                      << "      Cost: " << cost_2 << std::endl
+                      << "      Maximum Velocity Rate: " << v_max_2 << " m/s" << std::endl
+                      << "      Maximum Acceleration Rate: " << a_max_2 << " m/s^2" << std::endl;
+            // 保存 速度，加速度曲线，用于MATLAB绘制
+            for(double t_cur = 0.0; t_cur <= t_lap_2; t_cur += 0.01)
+            {
+                
+                csv_blue_vel << t_cur << "," << traj_GD.getVel(t_cur).norm() << "\n";
+                csv_blue_acc << t_cur << "," << traj_GD.getAcc(t_cur).norm() << "\n";
+            }
+            csv_blue_vel.close();
+            csv_blue_acc.close();
+
+
+            // tc0 = std::chrono::high_resolution_clock::now();
+            // traj = amTrajOpt.genOptimalTrajDCs3(route, zeroVec, zeroVec, zeroVec, zeroVec);   // 只实现了 s=3
+            // tc1 = std::chrono::high_resolution_clock::now();
+            // d3 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count();
+            // d3_sum += d3;
+            // t_lap_3 = traj.getTotalDuration();
+            // t_lap_sum_3 += t_lap_3;
+            // cost_3 = amTrajOpt.evaluateObjective(traj);
+            // cost_sum_3 += cost_3;
+            // v_max_3 = traj.getMaxVelRate();
+            // v_max_sum_3 += v_max_3;
+            // a_max_3 = traj.getMaxAccRate();
+            // a_max_sum_3 += a_max_3;
+            // // viz.visualize(traj, route, 3);
+            // // std::cout << "PURPLE: Constrained Spatial Optimal Trajectory with Trapezoidal Time Allocation" << std::endl
+            // //           << "      Planning time:" << d3*1000 << " ms" << std::endl
+            // //           << "      Lap Time: " << t_lap_3 << " s" << std::endl
+            // //           << "      Cost: " << cost_3 << std::endl
+            // //           << "      Maximum Velocity Rate: " << v_max_3 << " m/s" << std::endl
+            // //           << "      Maximum Acceleration Rate: " << a_max_3 << " m/s^2" << std::endl;
+            parameters.use_soft_constraints = true;
+            mav_trajectory_generation::PolynomialOptimizationNonLinear<N> opt_cons(dimension, parameters);
+            opt_cons.setupFromVertices(vertices, segment_times, derivative_to_optimize);
+            opt_cons.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::VELOCITY, v_max);
+            opt_cons.addMaximumMagnitudeConstraint(mav_trajectory_generation::derivative_order::ACCELERATION, a_max);
+            opt_cons.optimize();
+            tc1 = std::chrono::high_resolution_clock::now();
+            mav_traj2am_traj(opt_cons, durs, traj_GD);
+            //软约束，常违背约束
+            double ratio = std::max(traj_GD.getMaxVelRate() / v_max / (1.0 - config.epsilon * config.epsilon),
+                                    sqrt(traj_GD.getMaxAccRate() / a_max / (1.0 - config.epsilon * config.epsilon)));
+            traj_GD.scaleTime(1 / ratio);
+            //    
             d3 = std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count();
             d3_sum += d3;
-            t_lap_3 = traj.getTotalDuration();
+            t_lap_3 = traj_GD.getTotalDuration();
             t_lap_sum_3 += t_lap_3;
-            cost_3 = amTrajOpt.evaluateObjective(traj);
+            cost_3 = amTrajOpt.evaluateObjective(traj_GD);
             cost_sum_3 += cost_3;
-            v_max_3 = traj.getMaxVelRate();
+            v_max_3 = traj_GD.getMaxVelRate();
             v_max_sum_3 += v_max_3;
-            a_max_3 = traj.getMaxAccRate();
+            a_max_3 = traj_GD.getMaxAccRate();
             a_max_sum_3 += a_max_3;
-            // viz.visualize(traj, route, 3);
-            // std::cout << "PURPLE: Constrained Spatial Optimal Trajectory with Trapezoidal Time Allocation" << std::endl
-            //           << "      Planning time:" << d3*1000 << " ms" << std::endl
-            //           << "      Lap Time: " << t_lap_3 << " s" << std::endl
-            //           << "      Cost: " << cost_3 << std::endl
-            //           << "      Maximum Velocity Rate: " << v_max_3 << " m/s" << std::endl
-            //           << "      Maximum Acceleration Rate: " << a_max_3 << " m/s^2" << std::endl;
+            viz.visualize(traj_GD, route, 3);
+            std::cout << "PURPLE: Constrained Spatial Optimal Trajectory with Trapezoidal Time Allocation" << std::endl
+                      << "      Planning time:" << d3*1000 << " ms" << std::endl
+                      << "      Lap Time: " << t_lap_3 << " s" << std::endl
+                      << "      Cost: " << cost_3 << std::endl
+                      << "      Maximum Velocity Rate: " << v_max_3 << " m/s" << std::endl
+                      << "      Maximum Acceleration Rate: " << a_max_3 << " m/s^2" << std::endl;
+            // 保存 速度，加速度曲线，用于MATLAB绘制
+            for(double t_cur = 0.0; t_cur <= t_lap_3; t_cur += 0.01)
+            {
+                
+                csv_purple_vel << t_cur << "," << traj_GD.getVel(t_cur).norm() << "\n";
+                csv_purple_acc << t_cur << "," << traj_GD.getAcc(t_cur).norm() << "\n";
+            }
+            csv_purple_vel.close();
+            csv_purple_acc.close();
+
+
 
             tc0 = std::chrono::high_resolution_clock::now();
             traj = amTrajOpt.genOptimalTrajDTCWholeScales3(route, zeroVec, zeroVec, zeroVec, zeroVec);   // 只实现了 s=3
@@ -480,12 +601,12 @@ int main(int argc, char **argv)
             a_max_4 = traj.getMaxAccRate();
             a_max_sum_4 += a_max_4;
             viz.visualize(traj, route, 4);
-            // std::cout << "GREEN: Constrained AM Spatial-Temporal Optimal Trajectory with whole scale" << std::endl
-            //           << "      Planning time:" << d4*1000 << " ms" << std::endl
-            //           << "      Lap Time: " << t_lap_4 << " s" << std::endl
-            //           << "      Cost: " << cost_4 << std::endl
-            //           << "      Maximum Velocity Rate: " << v_max_4 << " m/s" << std::endl
-            //           << "      Maximum Acceleration Rate: " << a_max_4 << " m/s^2" << std::endl;
+            std::cout << "GREEN: Constrained AM Spatial-Temporal Optimal Trajectory with whole scale" << std::endl
+                      << "      Planning time:" << d4*1000 << " ms" << std::endl
+                      << "      Lap Time: " << t_lap_4 << " s" << std::endl
+                      << "      Cost: " << cost_4 << std::endl
+                      << "      Maximum Velocity Rate: " << v_max_4 << " m/s" << std::endl
+                      << "      Maximum Acceleration Rate: " << a_max_4 << " m/s^2" << std::endl;
             // 保存 速度，加速度曲线，用于MATLAB绘制
             for(double t_cur = 0.0; t_cur <= t_lap_4; t_cur += 0.01)
             {

@@ -33,7 +33,7 @@ public:
     ros::Publisher wayPointsPub;
     ros::Publisher appliedTrajectoryPub;
 
-    void visualize(const Trajectory &appliedTraj, const std::vector<Eigen::Vector3d> &route, ros::Time timeStamp);
+    void visualize(const Trajectory &appliedTraj, const std::vector<Eigen::Vector3d> &route, ros::Time timeStamp, int id);
 };
 
 class MavGlobalPlanner

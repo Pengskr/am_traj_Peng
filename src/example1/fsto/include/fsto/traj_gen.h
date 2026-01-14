@@ -15,7 +15,8 @@ public:
                         Eigen::Vector3d initialVel,
                         Eigen::Vector3d initialAcc,
                         Eigen::Vector3d finalVel,
-                        Eigen::Vector3d finalAcc) const;
+                        Eigen::Vector3d finalAcc,
+                        int id_alg) const;
 
 private:
     Config config;
